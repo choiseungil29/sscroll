@@ -14,3 +14,4 @@ class Content(Base):
     id = Column(Integer, primary_key=True)
     title = Column(String)
     data = Column(String)
+    permanent_id = Column(String)

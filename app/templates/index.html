@@ -11,12 +11,12 @@
 
 </head>
 <body>
-	<h1>{{ title }}</h1>
-	<div style="display: flex; align-items: center; justify-content: center">
+	<h1 style="padding-top: 10%;">{{ title }}</h1>
+	<div style="display: flex; align-items: center; justify-content: center; padding: 10%; max-width: 1024px; margin:0 auto;">
 		{{ data|safe }}
 	</div>
 	<form action="/">
-		<button type="submit" class="btn btn-primary btn-lg btn-block" style="position:fixed; bottom:0; border-radius:0px;">다른 게시물</button>
+		<button type="submit" class="btn btn-primary btn-lg btn-block" style="position:fixed; bottom:0; border-radius:0px; height: 7%; font-size: 3em">다른 게시물</button>
 	</form>
 </body>
 </html>
