@@ -1,6 +1,7 @@
 import random
 import hashlib
 import urllib
+import ujson
 
 from flask import Flask, render_template, url_for, redirect, request
 from flask_cors import CORS
@@ -71,8 +72,13 @@ def login():
         rescode = response.getcode()
         if rescode == 200:
             response_body = response.read()
+            import pdb
+            pdb.set_trace()
             print(response_body.decode('utf-8'))
         else:
             print("Error Code:" + rescode)
+
+        '''u = session.query(models.User).\
+                filter(models.User.email == '''
         print('sibal')
         return redirect(url_for('index'))

@@ -19,7 +19,7 @@ class Content(Base):
     title = Column(String)
     data = Column(String)
     permanent_id = Column(String, unique=True, index=True)
-    origin = Column(Enum(enums.DataOriginEnum))
+    source = Column(Enum(enums.DataOriginEnum))
     created_at = Column(DateTime)
 
     def header(self):
@@ -44,6 +44,4 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     signup_type = Column(Enum(enums.SignupTypeEnum))
-
-
-
+    email = Column(String)

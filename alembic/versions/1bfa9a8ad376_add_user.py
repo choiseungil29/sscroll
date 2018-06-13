@@ -1,8 +1,8 @@
-"""add user and enums
+"""add user
 
-Revision ID: 50a3740c4cfd
-Revises: adcbf279704c
-Create Date: 2018-06-13 20:31:29.876320
+Revision ID: 1bfa9a8ad376
+Revises: 1d82d8d885eb
+Create Date: 2018-06-13 21:17:42.864812
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '50a3740c4cfd'
-down_revision = 'adcbf279704c'
+revision = '1bfa9a8ad376'
+down_revision = '1d82d8d885eb'
 branch_labels = None
 depends_on = None
 
@@ -21,6 +21,7 @@ def upgrade():
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('signup_type', sa.Enum('NAVER', name='signuptypeenum'), nullable=True),
+    sa.Column('email', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
