@@ -1,0 +1,33 @@
+
+@font-face {
+	font-family: kopub;
+	src: url('kopub_dotum_medium.otf');
+}
+
+* {
+	font-family: kopub;
+}
+
+p {
+}
+
+div .main {
+	display: flex;
+	align-items: center;
+	justify-content center;
+	padding-bottom: 20%;
+	margin:0 auto;
+}
+
+div .data {
+	padding: 5%;
+	font-size: 3vw;
+	width: 100%;
+	max-width: 1080px;
+}
+
+img {
+	max-width: 100%;
+	width: 100%;
+	height: auto;
+}

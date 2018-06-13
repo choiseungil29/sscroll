@@ -3,21 +3,32 @@
 
 <html>
 <head>
-	<title>scroll!</title>
-	<meta name="viewport" content="with=device-width, minimum-scale=0.1, user-scalable=no" />
-	<meta name="referrer" content="naver" />
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-
+	{% include "head.html" %}
 </head>
 <body>
-	<h1 style="padding-top: 10%;">{{ title }}</h1>
-	<div style="display: flex; align-items: center; justify-content: center; padding: 10%; max-width: 1024px; margin:0 auto;">
-		{{ data|safe }}
+	
+	<nav class="navbar bg-primary navbar-dark sticky-top navbar-expand-lg">
+		<a class="navbar-brand" href="/">쓰크롤</a>
+		<ul class="nav navbar-nav navbar-right">
+			<li><a id="login" class="nav-link" href="/login">로그인</a></li>
+		</ul>
+	</nav>
+	<h3 style="padding-top: 10%; padding: 3%">{{ title }}</h1>
+	<div class="main">
+		<div class="data container">
+			<p style="font-size: 2vw;">작성일 : {{ created_at }}</p>
+			<div class="row">
+				<div class="col">
+					{{ data|safe }}
+				</div>
+
+			</div>
+		</div>
 	</div>
-	<form action="/">
-		<button type="submit" class="btn btn-primary btn-lg btn-block" style="position:fixed; bottom:0; border-radius:0px; height: 7%; font-size: 3em">다른 게시물</button>
-	</form>
-</body>
+	<nav class="navbar bg-primary navbar-dark fixed-bottom">
+		<a href="/" class="btn btn-default btn-block text-light">다른 게시물</a>
+	</nav>
+
+	</body>
 </html>
 
