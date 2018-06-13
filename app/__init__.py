@@ -19,13 +19,11 @@ def index():
     all_data = session.query(Content).all()
     c = random.choice(all_data)
     m = hashlib.sha256(c.title.encode())
-    # c.data = c.data.replace('https', 'http').replace('https', 'http')
     if c.permanent_id != m.hexdigest():
         session.delete(c)
         session.commit()
         return redirect(url_for('index'))
     return redirect(url_for('content', url=c.permanent_id))
-    # return redirect(url_for('content', url='1fad628588c7f066c0c8c9aec5dbd3083deb5b4b58b6a5abc7b445c507245793'))
 
 @app.route('/<url>')
 def content(url):

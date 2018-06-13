@@ -1,8 +1,8 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String, Integer, DateTime
+from sqlalchemy import Column, String, Integer, DateTime, Enum
 
 import db
-
+import enums
 
 
 Base = declarative_base(bind=db.engine)
@@ -19,7 +19,7 @@ class Content(Base):
     title = Column(String)
     data = Column(String)
     permanent_id = Column(String, unique=True, index=True)
-    origin = Column(String)
+    origin = Column(Enum(enums.DataOriginEnum))
     created_at = Column(DateTime)
 
     def header(self):
@@ -33,4 +33,17 @@ class Content(Base):
 
     def to_html(self):
         pass
+
+
+class User(Base):
+    """
+    유저
+    """
+
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True)
+    signup_type = Column(Enum(enums.SignupTypeEnum))
+
+
 

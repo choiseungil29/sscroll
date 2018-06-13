@@ -16,6 +16,8 @@ from db import session, engine
 
 from models import Content
 
+import models
+
 s3 = boto3.client('s3', aws_access_key_id='AKIAIRCAKNRDHMQ5DTXA', aws_secret_access_key='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')
 bucket = 'sichoi-scroll'
 
@@ -98,7 +100,7 @@ class Dogdrip(Crawler):
             exist = session.query(Content).filter(Content.permanent_id == hashed).first()
             if exist:
                 exist.created_at = date
-                exist.origin = 'dogdrip'
+                exist.origin = DataOriginEnum.DOGDRIP
                 session.commit()
                 print('passed')
                 return
@@ -132,7 +134,7 @@ class Dogdrip(Crawler):
             print(e)
             print('what')
             return
-        item = Content(title=title, data=content, permanent_id=hashed, created_at=date, origin='dogdrip')
+        item = Content(title=title, data=content, permanent_id=hashed, created_at=date, origin=DataOriginEnum.DOGDRIP)
         session.add(item)
         session.commit()
         print('added!')
