@@ -17,6 +17,7 @@ from db import session, engine
 from models import Content
 
 import models
+import enums
 
 s3 = boto3.client('s3', aws_access_key_id='AKIAIRCAKNRDHMQ5DTXA', aws_secret_access_key='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')
 bucket = 'sichoi-scroll'
@@ -55,7 +56,8 @@ class Dogdrip(Crawler):
         Crawler.__init__(self, default_url)
 
     async def __aenter__(self):
-        a = time.time()
+        pass
+        '''a = time.time()
 
         fts = []
         for x in range(263):
@@ -71,7 +73,7 @@ class Dogdrip(Crawler):
             k, v = c.split('=')
             fts.append(asyncio.ensure_future(self.fetch_contents({k: v})))
 
-        await asyncio.gather(*fts)
+        await asyncio.gather(*fts)'''
 
     async def __aexit__(self, *args):
         pass
@@ -87,12 +89,19 @@ class Dogdrip(Crawler):
     async def fetch_contents(self, params):
         bs = await Crawler.fetch(self, partial(requests.get, url=self.base_url, params=params))
 
+        res = self.parse_content(bs)
+        if res is None:
+            return
+        print(res.title)
+        self.parse_comments(bs, params, res)
+
+    def parse_content(self, bs):
+        print('parse content')
         try:
             new = bs
             title = new.select('title')[0].text
             m = hashlib.sha256(title.encode())
             hashed = m.hexdigest()
-
 
             date = ' '.join(new.select('div.date')[0].text.replace('\n', '').replace('\t', '').split(' ')[:2])
             date = datetime.strptime(date, '%Y.%m.%d %H:%M:%S')
@@ -100,10 +109,10 @@ class Dogdrip(Crawler):
             exist = session.query(Content).filter(Content.permanent_id == hashed).first()
             if exist:
                 exist.created_at = date
-                exist.origin = DataOriginEnum.DOGDRIP
+                exist.origin = enums.DataOriginEnum.DOGDRIP
                 session.commit()
                 print('passed')
-                return
+                return exist
 
             content = new.select('div#article_1')[0]
             length = len(content.select('img'))
@@ -134,16 +143,96 @@ class Dogdrip(Crawler):
             print(e)
             print('what')
             return
-        item = Content(title=title, data=content, permanent_id=hashed, created_at=date, origin=DataOriginEnum.DOGDRIP)
+        item = Content(title=title, data=content, permanent_id=hashed, created_at=date, origin=enums.DataOriginEnum.DOGDRIP)
         session.add(item)
         session.commit()
-        print('added!')
+        print('ad ded!')
+        return item
+
+    def parse_comments(self, bs, params, content):
+        print('parse comments!')
+        try:
+            last_page = int(bs.select('div.replyBox > div.pagination.a1 > strong')[0].text)
+        except:
+            last_page = 1
+
+        for i in range(last_page):
+            page = i+1
+            page_data_format = f'''<?xml version="1.0" encoding="utf-8" ?>
+            <methodCall>
+            <params>
+            <document_srl><![CDATA[{params['document_srl']}]]></document_srl>
+            <mid><![CDATA[dogdrip]]></mid>
+            <cpage><![CDATA[{page}]]></cpage>
+            <module><![CDATA[board]]></module>
+            </params>
+            </methodCall>'''
+            # res = await Crawler.fetch(self, partial(requests.post, url=self.base_url, headers={'Content-Type':'text/plain'}, data=page_data_format))
+            res = requests.post(url=self.base_url, headers={'Content-Type': 'text/plain'}, data=page_data_format) # TODO: 이부분 gather로 변경
+            comment_page = BeautifulSoup(res.text, 'html.parser') # 이게 comments가 들어있는 html
+            comments = comment_page.select('.replyItem')
+
+            for comment in comments:
+                created_at = datetime.strptime(' '.join(comment.select('.date')[0].text.replace('\n', '').replace('\t', '').split(' ')[:2]), '%Y.%m.%d %H:%M:%S') # TODO: date 정확히 구해와야함
+                text = comment.select('.comment')[0].text
+                permanent_id = comment.select('a[name]')[0]['name'].split('_')[1]
+
+                comment_obj = session.query(models.Comment).\
+                        filter(models.Comment.permanent_id == permanent_id).\
+                        first()
+
+                if comment_obj is not None:
+                    print('comment already proceed')
+                    continue
+
+                parent_id = None
+                if 'parent_srl' in comment.attrs:
+                    parent_comment = session.query(models.Comment).\
+                            filter(models.Comment.permanent_id == int(comment['parent_srl'])).\
+                            first()
+                    parent_id = parent_comment.id
+                comment_obj = models.Comment(data=text, created_at=created_at, permanent_id=permanent_id, parent_id=parent_id)
+                comment_obj.cid = content.id
+                session.add(comment_obj)
+                session.flush()
+                # TODO: comment to comment의 relationship 정리 후 DB에create
+                # 댓글 정렬 방법
+                # 1. parent_comment가 없는 애들을 다 가져온다
+                # 2. 다 가져와서 created_at 으로 정렬
+                # 3. comment들의 child조사
+                # 4. child를 created_at 순서대로 끼워넣어준다
+                # 5. child를 대상으로 3->4 반복.
+                # parent = 
+                print(text)
+        session.commit()
+
+    async def run(self):
+        a = time.time()
+
+        fts = []
+        for x in range(263):
+            fts.append(asyncio.ensure_future(self.fetch_content_urls({'mid': 'dogdrip', 'page': x, 'sort_index': 'popular'})))
+
+        await asyncio.gather(*fts)
+        b = time.time()
+        print(b - a)
+        print(len(self.contents))
+
+        fts = []
+        for c in self.contents:
+            k, v = c.split('=')
+            fts.append(asyncio.ensure_future(self.fetch_contents({k: v})))
+
+        await asyncio.gather(*fts)
+
 
 async def crawl():
     dogdrip = Dogdrip()
-    async with dogdrip as d:
+    async with dogdrip:
+        await dogdrip.run()
         session.commit()
     print('ended')
+
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(crawl())

@@ -6,29 +6,10 @@
 	{% include "head.html" %}
 </head>
 <body>
-	
-	<nav class="navbar bg-primary navbar-dark sticky-top navbar-expand-lg">
-		<a class="navbar-brand" href="/">쓰크롤</a>
-		<ul class="nav navbar-nav navbar-right">
-			<li><a id="login" class="nav-link" href="/login">로그인</a></li>
-		</ul>
-	</nav>
-	<h3 style="padding-top: 10%; padding: 3%">{{ title }}</h1>
-	<div class="main">
-		<div class="data container">
-			<p style="font-size: 2vw;">작성일 : {{ created_at }}</p>
-			<div class="row">
-				<div class="col">
-					{{ data|safe }}
-				</div>
+	{% include "nav.html" %}
 
-			</div>
-		</div>
-	</div>
-	<nav class="navbar bg-primary navbar-dark fixed-bottom">
-		<a href="/" class="btn btn-default btn-block text-light">다른 게시물</a>
-	</nav>
-
+	{% block data %}
+	{% endblock %}
 	</body>
 </html>
 

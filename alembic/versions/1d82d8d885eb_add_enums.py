@@ -9,6 +9,12 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 import sqlalchemy as sa
 
+
+import sys
+import os
+
+sys.path.append(os.getcwd())
+
 import enums
 
 

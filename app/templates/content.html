@@ -1,0 +1,44 @@
+
+{% extends "index.html" %}
+
+{% block data %}
+<h3 style="padding: 3%">{{ title }}</h3>
+<div class="main">
+	<div class="data container">
+		<form action="http://sscroll.site/{{ request.path }}/ward" method="post">
+			<button class="btn btn-primary" type="submit">와드박기</button>
+		</form>
+		<p style="font-size: 2vw;">작성일 : {{ created_at }}</p>
+		<div class="row">
+			<div class="col">
+				{{ data|safe }}
+				<ul class="list-group"> <!-- 댓글들 -->
+				{% for comment in comments recursive %}
+					<li class="list-group-item"><p>{{ comment.data }}</p>
+					{% if comment.children|length> 0 %}
+						<ul class="list-group">
+							{{ loop(comment.children) }}
+						</ul>
+					{% endif %}
+					</li>
+				{% endfor %}
+				</ul>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+<nav class="navbar bg-primary navbar-dark fixed-bottom">
+	<!-- 댓글 쓰기 -->
+	{% if user is not none %}
+	<div class="input-group">
+		<input type="text" class="form-control" placeholder="댓글 내용">
+		<span class="input-group-btn">
+			<button class="btn btn-primary btn-block" style="border-top-left-radius: 0px; border-bottom-left-radius:0px;" type="button">작성</button>
+		</span>
+	</div>
+	{% endif %}
+	<a href="/" class="btn btn-default btn-block text-light">다른 게시물</a>
+</nav>
+{% endblock %}

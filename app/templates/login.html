@@ -6,6 +6,7 @@
 		<script type="text/javascript" src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.0.js" charset="utf-8"></script>
 	</head>
 	<body>
+		{% include "nav.html" %}
 		<div id="naverIdLogin">
 			<a id="naverIdLogin_loginButton" href="#">
 				<img src="https://static.nid.naver.com/oauth/big_g.PNG?version=js-2.0.0" height="60" >
@@ -36,7 +37,6 @@
 		    });
 
 		    $("#naverIdLogin_loginButton").attr('href', naverLogin.generateAuthorizeUrl());
-		    console.log('completed');
 		</script>
 	</body>
 </html>
