@@ -6,7 +6,7 @@ import ujson
 from flask import Flask, render_template, url_for, redirect, request, session, make_response
 from bs4 import BeautifulSoup
 
-from db import session as db_session
+import db
 
 import models
 import enums
@@ -19,17 +19,17 @@ from decorator import route
 # @app.route('/')
 @route('/')
 def index(context):
-    all_data = db_session.query(models.Content).all()
+    all_data = db.session.query(models.Content).all()
     c = random.choice(all_data)
     m = hashlib.sha256(c.title.encode())
     if c.permanent_id != m.hexdigest():
-        db_session.delete(c)
-        db_session.commit()
+        db.session.delete(c)
+        db.session.commit()
         return redirect(url_for('index'))
 
     if context.user is not None:
         # 유저가 존재하면 기록한다.
-        showed_content = db_session.query(models.ShowedContent).\
+        showed_content = db.session.query(models.ShowedContent).\
                 filter(models.ShowedContent.uid == context.user.id).\
                 filter(models.ShowedContent.cid == c.id).\
                 first()
@@ -38,14 +38,14 @@ def index(context):
             return redirect(url_for('index'))
 
         showed_content = models.ShowedContent(uid=context.user.id, content=c)
-        db_session.add(showed_content)
+        db.session.add(showed_content)
 
-    db_session.commit()
+    db.session.commit()
     return redirect(url_for('content', url=c.permanent_id))
 
 @route('/<url>')
 def content(url, context):
-    c = db_session.query(models.Content).\
+    c = db.session.query(models.Content).\
             filter(models.Content.permanent_id == url).first()
     if c is None:
         return redirect(url_for('index'))
@@ -53,20 +53,23 @@ def content(url, context):
     data = BeautifulSoup(c.data, 'html.parser')
 
     for p in data.select('p'):
-        p['style'] = None
+        del p['style']
 
     for span in data.select('span'):
-        span['style'] = None
+        del span['style']
 
     for table in data.select('table'):
-        table['style'] = None
+        del table['style']
 
     for div in data.select('div'):
-        if 'class' in div.attrs and 'main' in div.attrs['class']:
+        if 'class' in div.attrs and 'main' in div.attrs['class'] or 'class' in div.attrs and 'data' in div.attrs['class']:
             continue
-        if 'class' in div.attrs and 'data' in div.attrs['class']:
-            continue
-        div['style'] = None
+        
+        del div['style']
+
+    for font in data.select('font'):
+        del font['style']
+        del font['size']
     
     for img in data.select('img'):
         if 'height' in img.attrs:
@@ -82,14 +85,14 @@ def content(url, context):
     comments = sorted(comments, key=lambda x: x.created_at)
 
     data = data.decode()
-    db_session.commit()
+    db.session.commit()
 
     return render_template('content.html', title=c.title, data=data, created_at=c.created_at, user=context.user, comments=comments)
 
 
 @route('/<url>/ward', methods=['POST'])
 def set_ward(url, context):
-    c = db_session.query(models.Content).\
+    c = db.session.query(models.Content).\
             filter(models.Content.permanent_id == url).first()
 
     res = make_response('와드 성공!')
@@ -104,19 +107,19 @@ def set_ward(url, context):
 
         res.set_cookie('wards', ujson.dumps(wards))
     else:
-        ward = db_session.query(models.Ward).\
+        ward = db.session.query(models.Ward).\
                 filter(models.Ward.uid == context.user.id).\
                 filter(models.Ward.cid == c.id).\
                 first()
 
         if ward is None:
             ward = models.Ward(uid=context.user.id, cid=c.id)
-            db_session.add(ward)
+            db.session.add(ward)
 
         else:
             res = make_response('이미 와드되어있습니다.')
 
-    db_session.commit()
+    db.session.commit()
     return res
 
 @route('/ward')
@@ -125,12 +128,12 @@ def ward(context):
     if context.user is None:
         # 비유저의 와드들 가져옴
         wards = ujson.loads(request.cookies.get('wards', ujson.dumps({})))
-        contents = db_session.query(models.Content).\
+        contents = db.session.query(models.Content).\
                 filter(models.Content.permanent_id.in_([k for k in wards])).\
                 all()
     else:
         # 유저의 와드들 가져옴
-        wards = db_session.query(models.Ward).\
+        wards = db.session.query(models.Ward).\
                 filter(models.Ward.uid == context.user.id).\
                 all()
 
@@ -161,15 +164,15 @@ def login(context):
         else:
             print("Error Code:" + rescode)
 
-        user = db_session.query(models.User).\
+        user = db.session.query(models.User).\
                 filter(models.User.email == res['response']['email']).\
                 filter(models.User.signup_type == enums.SignupTypeEnum.NAVER).\
                 first()
 
         if user is None:
             user = models.User(signup_type=enums.SignupTypeEnum.NAVER, email = res['response']['email'], access_token=token)
-            db_session.add(user)
-            db_session.commit()
+            db.session.add(user)
+            db.session.commit()
         else:
             session['email'] = user.email
             session['signup_type'] = user.signup_type.name

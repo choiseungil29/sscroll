@@ -2,9 +2,9 @@
 from flask import session
 
 from app import app
-from db import session as db_session
 
 import models
+import db
 
 from functools import wraps
 
@@ -33,7 +33,7 @@ class ApiContext:
             email = session['email']
             signup_type = session['signup_type']
 
-            self.user = db_session.query(models.User).\
+            self.user = db.session.query(models.User).\
                     filter(models.User.email == email).\
                     filter(models.User.signup_type == signup_type).\
                     first()

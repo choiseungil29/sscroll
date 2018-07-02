@@ -1,13 +1,62 @@
 
 {% extends "index.html" %}
 
+{% block head %}
+<link rel='stylesheet' href='https://rawgit.com/daneden/animate.css/master/animate.css'>
+<script src='https://github.com/mouse0270/bootstrap-notify/releases/download/3.1.3/bootstrap-notify.min.js'></script>
+<script>
+
+	var notify_template = '<div data-notify="container" role="alert" class="col-xs-11 col-sm-2 alert alert-{0}" style="margin: 15px 0 15px 0; width: 150px;">\
+		<button type="button" class="close" data-notify="dismiss" style="top:7px;">\
+			<span aria-hidden="true">x</span>\
+			<span class="sr-only">Close</span>\
+		</button>\
+		<span data-notify="icon"></span>\
+		<span data-notify="title">{1}</span>\
+		<span data-notify="message" style="padding-right:15px">{2}</span>\
+		<a href="{3}" target="{4}" data-notify="url"></a>\
+	</div>'
+
+	var notify_params = function(msg) {
+		return [{
+			message: msg
+		}, {
+			placement: {
+				from: 'top',
+				align: 'right'
+			},
+			animate: {
+				enter: 'animated fadeInDown',
+				exit: 'animated fadeOutUp',
+			},
+			delay: 300,
+			type: 'info',
+			template: notify_template
+		}];
+	}
+
+	var notify = function(msg) {
+	    $.notify.apply($, notify_params(msg));
+	};
+
+	$(document).ready(function() {
+		console.log('hi');
+		$('#ward').on('click', function() {
+			$.post('{{request.path }}/ward', function(response) {
+				console.log(response);
+				notify(response);
+			});
+		});
+	});
+</script>
+{% endblock %}
+
 {% block data %}
+
 <h3 style="padding: 3%">{{ title }}</h3>
 <div class="main">
 	<div class="data container">
-		<form action="http://sscroll.site/{{ request.path }}/ward" method="post">
-			<button class="btn btn-primary" type="submit">와드박기</button>
-		</form>
+			<button id='ward' class="btn btn-primary">와드박기</button>
 		<p style="font-size: 2vw;">작성일 : {{ created_at }}</p>
 		<div class="row">
 			<div class="col">
@@ -42,3 +91,5 @@
 	<a href="/" class="btn btn-default btn-block text-light">다른 게시물</a>
 </nav>
 {% endblock %}
+
+
