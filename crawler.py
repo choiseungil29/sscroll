@@ -98,7 +98,7 @@ class Dogdrip(Crawler):
         if res is None:
             return
         print(res.title)
-        self.parse_comments(bs, params, res)
+        # self.parse_comments(bs, params, res)
 
     def parse_content(self, bs):
         print('parse content')
