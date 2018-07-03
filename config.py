@@ -12,3 +12,4 @@ class Config:
     DB_NAME = 'scroll01'
 
     AWS_ACCESS_KEY_ID = 'AKIAIRCAKNRDHMQ5DTXA'
+    AWS_SECRET_ACCESS_KEY = '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'
