@@ -6,6 +6,7 @@ import urllib.request
 import urllib.error
 import boto3
 import os
+import cfscrape
 
 from functools import partial
 from bs4 import BeautifulSoup
@@ -29,6 +30,8 @@ opener.addheaders = [
         ('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'),
         ('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8')]
 urllib.request.install_opener(opener)
+
+scraper = cfscrape.create_scraper()
 
 class Crawler:
     """
@@ -81,7 +84,7 @@ class Dogdrip(Crawler):
         pass
 
     async def fetch_content_urls(self, params):
-        bs = await Crawler.fetch(self, partial(requests.get, url=self.base_url, params=params))
+        bs = await Crawler.fetch(self, partial(scraper.get, url=self.base_url, params=params))
         arr = bs.select('tr.bg1') + bs.select('tr.bg2')
         links = [c.find('a')['href'].split('&')[-1] for c in arr]
         for l in links:
@@ -89,7 +92,7 @@ class Dogdrip(Crawler):
                 self.contents.append(l)
 
     async def fetch_contents(self, params):
-        bs = await Crawler.fetch(self, partial(requests.get, url=self.base_url, params=params))
+        bs = await Crawler.fetch(self, partial(scraper.get, url=self.base_url, params=params))
 
         res = self.parse_content(bs)
         if res is None:
@@ -170,7 +173,7 @@ class Dogdrip(Crawler):
             </params>
             </methodCall>'''
             # res = await Crawler.fetch(self, partial(requests.post, url=self.base_url, headers={'Content-Type':'text/plain'}, data=page_data_format))
-            res = requests.post(url=self.base_url, headers={'Content-Type': 'text/plain'}, data=page_data_format) # TODO: 이부분 gather로 변경
+            res = scraper.post(url=self.base_url, headers={'Content-Type': 'text/plain'}, data=page_data_format) # TODO: 이부분 gather로 변경
             comment_page = BeautifulSoup(res.text, 'html.parser') # 이게 comments가 들어있는 html
             comments = comment_page.select('.replyItem')
 
