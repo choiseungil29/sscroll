@@ -138,13 +138,17 @@ def ward(context):
                 all()
 
         contents = [c.content for c in wards]
-
-    print('zzz')
     return render_template('ward.html', contents=contents)
 
 @route('/recent')
 def recent(context):
-    pass
+    contents = db.session.query(models.ShowedContent).\
+            filter(models.ShowedContent.uid == context.user.id).\
+            all()
+
+    contents = sorted(contents, key=lambda x: x.created_at)
+
+    return render_template('recent.html', showed_contents=contents)
 
 
 @route('/login', methods=['GET', 'POST'])
@@ -190,10 +194,21 @@ def logout(context):
 
     return redirect(url_for('index'))
 
-@route('/comment')
+@route('/comment', methods=['POST'])
 def comment(context):
     """
     코멘트를 작성하는 API
     작성 후 맨 아래로 스크롤되어짐
     """
-    pass
+    permanent_id = request.form['permanent_id']
+    content = db.session.query(models.Content).\
+            filter(models.Content.permanent_id == permanent_id).\
+            first()
+
+    comment = models.Comment(created_at=datetime.now(), uid=context.user.id, data=request.form['data'], cid=content.id)
+    db.session.add(comment)
+    db.session.commit()
+
+    return make_response('댓글 작성 성공')
+
+

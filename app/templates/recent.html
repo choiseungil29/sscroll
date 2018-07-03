@@ -1,0 +1,28 @@
+
+{% extends "index.html" %}
+
+{% block data %}
+<h3 style="padding: 3%"> 쓰크롤 - 최근 본 게시물</h3>
+<div class="main">
+	<div class="data container">
+		<table class="table">
+			<thead>
+				<tr>
+					<th>제목</th>
+					<th>게시물 본 시각</th>
+				</tr>
+			</thead>
+		{% for showed in showed_contents %}
+			<tbody>
+				<tr>
+					<td><a href="/{{ showed.content.permanent_id }}">{{ showed.content.title }}</a></td>
+					<td>{{ showed.created_at }}</td>
+				</tr>
+			</tbody>
+		{% endfor %}
+		</table>
+		</ul>
+	</div>
+</div>
+
+{% endblock %}

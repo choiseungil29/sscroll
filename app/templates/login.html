@@ -7,7 +7,7 @@
 	</head>
 	<body>
 		{% include "nav.html" %}
-		<div id="naverIdLogin">
+		<div id="naverIdLogin" class="container" style="max-width: 300px; margin-top: 1em;">
 			<a id="naverIdLogin_loginButton" href="#">
 				<img src="https://static.nid.naver.com/oauth/big_g.PNG?version=js-2.0.0" height="60" >
 			</a>
@@ -24,16 +24,13 @@
 		    naverLogin.init();
 
 		    window.addEventListener('load', function() {
-			    console.log(naverLogin);
 			    naverLogin.getLoginStatus(function (status) {
-				    console.log(status);
 				    if (status) {
 					    $.post('login', {accessToken: naverLogin.accessToken.accessToken, loginType: 'naver'}, function(response) {
 						    window.location = response.redirect;
 					    });
 				    }
 			    });
-			    console.log('sibal');
 		    });
 
 		    $("#naverIdLogin_loginButton").attr('href', naverLogin.generateAuthorizeUrl());

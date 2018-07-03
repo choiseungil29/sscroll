@@ -19,7 +19,9 @@ from models import Content
 import models
 import enums
 
-s3 = boto3.client('s3', aws_access_key_id='AKIAIRCAKNRDHMQ5DTXA', aws_secret_access_key='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')
+from config import Config
+
+s3 = boto3.client('s3', aws_access_key_id=Config.AWS_ACCESS_KEY_ID, aws_secret_access_key=Config.AWS_SECRET_ACCESS_KEY)
 bucket = 'sichoi-scroll'
 
 opener = urllib.request.build_opener()

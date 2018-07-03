@@ -37,13 +37,10 @@ class Comment(Base):
     created_at = Column(DateTime)
     id = Column(Integer, primary_key=True)
     uid = Column(Integer)
-    name = Column(String)
     data = Column(String)
     
     cid = Column(Integer, ForeignKey('contents.id'))
     content = relationship('Content', back_populates='comments')
-
-    permanent_id = Column(Integer, unique=True)
 
     parent_id = Column(Integer, ForeignKey('comments.id'))
     children = relationship('Comment', lazy='joined')

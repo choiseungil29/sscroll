@@ -40,13 +40,20 @@
 	};
 
 	$(document).ready(function() {
-		console.log('hi');
 		$('#ward').on('click', function() {
 			$.post('{{request.path }}/ward', function(response) {
-				console.log(response);
 				notify(response);
 			});
 		});
+
+		$('#addComment').on('click', function() {
+			$.post('/comment',
+				{ permanent_id: '{{ request.path }}'.substring(1), data: $('#comment')[0].value },
+				function(response) {
+					notify(response);
+				});
+		});
+
 	});
 </script>
 {% endblock %}
@@ -64,7 +71,7 @@
 				<ul class="list-group"> <!-- 댓글들 -->
 				{% for comment in comments recursive %}
 					<li class="list-group-item"><p>{{ comment.data }}</p>
-					{% if comment.children|length> 0 %}
+					{% if comment.children|length > 0 %}
 						<ul class="list-group">
 							{{ loop(comment.children) }}
 						</ul>
@@ -80,14 +87,14 @@
 
 <nav class="navbar bg-primary navbar-dark fixed-bottom">
 	<!-- 댓글 쓰기 -->
-	{% if user is not none %}
+	<!-- {% if user is not none %}
 	<div class="input-group">
-		<input type="text" class="form-control" placeholder="댓글 내용">
+		<input id="comment" type="text" class="form-control" placeholder="댓글 내용">
 		<span class="input-group-btn">
-			<button class="btn btn-primary btn-block" style="border-top-left-radius: 0px; border-bottom-left-radius:0px;" type="button">작성</button>
+			<button id="addComment" class="btn btn-primary btn-block" style="border-top-left-radius: 0px; border-bottom-left-radius:0px;" type="button">작성</button>
 		</span>
 	</div>
-	{% endif %}
+	{% endif %} -->
 	<a href="/" class="btn btn-default btn-block text-light">다른 게시물</a>
 </nav>
 {% endblock %}
