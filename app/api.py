@@ -147,6 +147,7 @@ def recent(context):
             all()
 
     contents = sorted(contents, key=lambda x: x.created_at)
+    contents = contents[::-1]
 
     return render_template('recent.html', showed_contents=contents)
 
