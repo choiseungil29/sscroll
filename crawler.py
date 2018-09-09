@@ -11,7 +11,7 @@ import cfscrape
 from functools import partial
 from bs4 import BeautifulSoup
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from db import session, engine
 
@@ -85,14 +85,15 @@ class Dogdrip(Crawler):
 
     async def fetch_content_urls(self, params):
         bs = await Crawler.fetch(self, partial(scraper.get, url=self.base_url, params=params))
-        arr = bs.select('tr.bg1') + bs.select('tr.bg2')
-        links = [c.find('a')['href'].split('&')[-1] for c in arr]
+        arr = bs.select('.title > a')
+        links = [c['href'].split('&')[-1] for c in arr]
         for l in links:
             if l not in self.contents:
                 self.contents.append(l)
 
     async def fetch_contents(self, params):
-        bs = await Crawler.fetch(self, partial(scraper.get, url=self.base_url, params=params))
+        # bs = await Crawler.fetch(self, partial(scraper.get, url=self.base_url, params=params))
+        bs = BeautifulSoup(requests.get(self.base_url, params).text, 'html.parser')
 
         res = self.parse_content(bs)
         if res is None:
@@ -104,16 +105,20 @@ class Dogdrip(Crawler):
         print('parse content')
         try:
             new = bs
-            title = new.select('title')[0].text
+            title = new.select('h4')[0].text
             m = hashlib.sha256(title.encode())
             hashed = m.hexdigest()
 
-            date = ' '.join(new.select('div.date')[0].text.replace('\n', '').replace('\t', '').split(' ')[:2])
-            date = datetime.strptime(date, '%Y.%m.%d %H:%M:%S')
+            '''date = ' '.join(new.select('div.date')[0].text.replace('\n', '').replace('\t', '').split(' ')[:2])
+            date = datetime.strptime(date, '%Y.%m.%d %H:%M:%S')'''
+            date = None
 
             exist = session.query(Content).filter(Content.permanent_id == hashed).first()
             if exist:
-                exist.created_at = date
+                if date is None:
+                    exist.created_at = datetime.utcnow() + timedelta(hours=9)
+                else:
+                    exist.created_at = date
                 exist.origin = enums.DataOriginEnum.DOGDRIP
                 session.commit()
                 print('passed')
@@ -149,6 +154,8 @@ class Dogdrip(Crawler):
             print('what')
             return
         item = Content(title=title, data=content, permanent_id=hashed, created_at=date, origin=enums.DataOriginEnum.DOGDRIP)
+        if item.created_at is None:
+            item.created_at = datetime.utcnow() + timedelta(hours=9)
         session.add(item)
         session.commit()
         print('ad ded!')
