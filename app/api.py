@@ -8,11 +8,10 @@ from bs4 import BeautifulSoup
 
 import db
 
-import models
 import enums
 
 from datetime import datetime
-from app import app
+from app import app, models
 from decorator import route
 
 

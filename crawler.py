@@ -62,23 +62,6 @@ class Dogdrip(Crawler):
 
     async def __aenter__(self):
         pass
-        '''a = time.time()
-
-        fts = []
-        for x in range(263):
-            fts.append(asyncio.ensure_future(self.fetch_content_urls({'mid': 'dogdrip', 'page': x, 'sort_index': 'popular'})))
-
-        await asyncio.gather(*fts)
-        b = time.time()
-        print(b - a)
-        print(len(self.contents))
-
-        fts = []
-        for c in self.contents:
-            k, v = c.split('=')
-            fts.append(asyncio.ensure_future(self.fetch_contents({k: v})))
-
-        await asyncio.gather(*fts)'''
 
     async def __aexit__(self, *args):
         pass
@@ -109,8 +92,6 @@ class Dogdrip(Crawler):
             m = hashlib.sha256(title.encode())
             hashed = m.hexdigest()
 
-            '''date = ' '.join(new.select('div.date')[0].text.replace('\n', '').replace('\t', '').split(' ')[:2])
-            date = datetime.strptime(date, '%Y.%m.%d %H:%M:%S')'''
             date = None
 
             exist = session.query(Content).filter(Content.permanent_id == hashed).first()
@@ -179,7 +160,6 @@ class Dogdrip(Crawler):
             <module><![CDATA[board]]></module>
             </params>
             </methodCall>'''
-            # res = await Crawler.fetch(self, partial(requests.post, url=self.base_url, headers={'Content-Type':'text/plain'}, data=page_data_format))
             res = scraper.post(url=self.base_url, headers={'Content-Type': 'text/plain'}, data=page_data_format) # TODO: 이부분 gather로 변경
             comment_page = BeautifulSoup(res.text, 'html.parser') # 이게 comments가 들어있는 html
             comments = comment_page.select('.replyItem')

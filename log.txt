@@ -2,3 +2,70 @@
 [2018-09-07 11:56:40 +0000] [31669] [INFO] Listening at: http://127.0.0.1:8000 (31669)
 [2018-09-07 11:56:40 +0000] [31669] [INFO] Using worker: sync
 [2018-09-07 11:56:40 +0000] [31678] [INFO] Booting worker with pid: 31678
+[2018-09-09 04:59:02 +0000] [16517] [INFO] Starting gunicorn 19.9.0
+[2018-09-09 04:59:02 +0000] [16517] [INFO] Listening at: http://127.0.0.1:8000 (16517)
+[2018-09-09 04:59:02 +0000] [16517] [INFO] Using worker: sync
+[2018-09-09 04:59:02 +0000] [16527] [INFO] Booting worker with pid: 16527
+[2018-09-09 04:59:03 +0000] [16527] [ERROR] Exception in worker process
+Traceback (most recent call last):
+  File "/home/sichoi/workspace/scroll/venv/lib/python3.6/site-packages/gunicorn/arbiter.py", line 583, in spawn_worker
+    worker.init_process()
+  File "/home/sichoi/workspace/scroll/venv/lib/python3.6/site-packages/gunicorn/workers/base.py", line 129, in init_process
+    self.load_wsgi()
+  File "/home/sichoi/workspace/scroll/venv/lib/python3.6/site-packages/gunicorn/workers/base.py", line 138, in load_wsgi
+    self.wsgi = self.app.wsgi()
+  File "/home/sichoi/workspace/scroll/venv/lib/python3.6/site-packages/gunicorn/app/base.py", line 67, in wsgi
+    self.callable = self.load()
+  File "/home/sichoi/workspace/scroll/venv/lib/python3.6/site-packages/gunicorn/app/wsgiapp.py", line 52, in load
+    return self.load_wsgiapp()
+  File "/home/sichoi/workspace/scroll/venv/lib/python3.6/site-packages/gunicorn/app/wsgiapp.py", line 41, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/sichoi/workspace/scroll/venv/lib/python3.6/site-packages/gunicorn/util.py", line 350, in import_app
+    __import__(module)
+  File "/home/sichoi/workspace/scroll/run.py", line 1, in <module>
+    from app import app, api
+  File "/home/sichoi/workspace/scroll/app/api.py", line 16, in <module>
+    from decorator import route
+  File "/home/sichoi/workspace/scroll/decorator.py", line 6, in <module>
+    import models
+ModuleNotFoundError: No module named 'models'
+[2018-09-09 04:59:03 +0000] [16527] [INFO] Worker exiting (pid: 16527)
+[2018-09-09 04:59:03 +0000] [16517] [INFO] Shutting down: Master
+[2018-09-09 04:59:03 +0000] [16517] [INFO] Reason: Worker failed to boot.
+[2018-09-09 04:59:22 +0000] [16793] [INFO] Starting gunicorn 19.9.0
+[2018-09-09 04:59:22 +0000] [16793] [INFO] Listening at: http://127.0.0.1:8000 (16793)
+[2018-09-09 04:59:22 +0000] [16793] [INFO] Using worker: sync
+[2018-09-09 04:59:22 +0000] [16803] [INFO] Booting worker with pid: 16803
+[2018-09-09 04:59:22 +0000] [16803] [ERROR] Exception in worker process
+Traceback (most recent call last):
+  File "/home/sichoi/workspace/scroll/venv/lib/python3.6/site-packages/gunicorn/arbiter.py", line 583, in spawn_worker
+    worker.init_process()
+  File "/home/sichoi/workspace/scroll/venv/lib/python3.6/site-packages/gunicorn/workers/base.py", line 129, in init_process
+    self.load_wsgi()
+  File "/home/sichoi/workspace/scroll/venv/lib/python3.6/site-packages/gunicorn/workers/base.py", line 138, in load_wsgi
+    self.wsgi = self.app.wsgi()
+  File "/home/sichoi/workspace/scroll/venv/lib/python3.6/site-packages/gunicorn/app/base.py", line 67, in wsgi
+    self.callable = self.load()
+  File "/home/sichoi/workspace/scroll/venv/lib/python3.6/site-packages/gunicorn/app/wsgiapp.py", line 52, in load
+    return self.load_wsgiapp()
+  File "/home/sichoi/workspace/scroll/venv/lib/python3.6/site-packages/gunicorn/app/wsgiapp.py", line 41, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/sichoi/workspace/scroll/venv/lib/python3.6/site-packages/gunicorn/util.py", line 350, in import_app
+    __import__(module)
+  File "/home/sichoi/workspace/scroll/run.py", line 1, in <module>
+    from app import app, api
+  File "/home/sichoi/workspace/scroll/app/api.py", line 20, in <module>
+    @route('/')
+  File "/home/sichoi/workspace/scroll/decorator.py", line 21, in wrapper
+    app.add_url_rule(uri, fn.__name__, decorator, **kwargs)
+AttributeError: module 'app' has no attribute 'add_url_rule'
+[2018-09-09 04:59:22 +0000] [16803] [INFO] Worker exiting (pid: 16803)
+[2018-09-09 04:59:22 +0000] [16793] [INFO] Shutting down: Master
+[2018-09-09 04:59:22 +0000] [16793] [INFO] Reason: Worker failed to boot.
+[2018-09-09 05:00:35 +0000] [17159] [INFO] Starting gunicorn 19.9.0
+[2018-09-09 05:00:35 +0000] [17159] [INFO] Listening at: http://127.0.0.1:8000 (17159)
+[2018-09-09 05:00:35 +0000] [17159] [INFO] Using worker: sync
+[2018-09-09 05:00:35 +0000] [17168] [INFO] Booting worker with pid: 17168
+[2018-09-09 05:04:06 +0000] [17159] [INFO] Handling signal: term
+[2018-09-09 05:04:06 +0000] [17168] [INFO] Worker exiting (pid: 17168)
+[2018-09-09 05:04:06 +0000] [17159] [INFO] Shutting down: Master

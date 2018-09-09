@@ -108,3 +108,5 @@ venv.bak/
 *.swp
 
 config.py
+
+*.log

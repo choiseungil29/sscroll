@@ -1,9 +1,8 @@
 
 from flask import session
 
-from app import app
+from app import app, models
 
-import models
 import db
 
 from functools import wraps
