@@ -15,9 +15,8 @@ from datetime import datetime, timedelta
 
 from db import session, engine
 
-from models import Content
+from app import models
 
-import models
 import enums
 
 from config import Config
@@ -94,7 +93,7 @@ class Dogdrip(Crawler):
 
             date = None
 
-            exist = session.query(Content).filter(Content.permanent_id == hashed).first()
+            exist = session.query(models.Content).filter(models.Content.permanent_id == hashed).first()
             if exist:
                 if date is None:
                     exist.created_at = datetime.utcnow() + timedelta(hours=9)
@@ -134,7 +133,7 @@ class Dogdrip(Crawler):
             print(e)
             print('what')
             return
-        item = Content(title=title, data=content, permanent_id=hashed, created_at=date, origin=enums.DataOriginEnum.DOGDRIP)
+        item = models.Content(title=title, data=content, permanent_id=hashed, created_at=date, origin=enums.DataOriginEnum.DOGDRIP)
         if item.created_at is None:
             item.created_at = datetime.utcnow() + timedelta(hours=9)
         session.add(item)

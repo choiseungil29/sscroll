@@ -2,8 +2,8 @@
 {% extends "index.html" %}
 
 {% block head %}
-<link rel='stylesheet' href='https://rawgit.com/daneden/animate.css/master/animate.css'>
-<script src='https://github.com/mouse0270/bootstrap-notify/releases/download/3.1.3/bootstrap-notify.min.js'></script>
+<link rel='stylesheet' href='https://rawgit.com/daneden/animate.css/master/animate.css' media="none" onload="if(media!='all')media='all'">
+<script async src='https://github.com/mouse0270/bootstrap-notify/releases/download/3.1.3/bootstrap-notify.min.js'></script>
 <script>
 
 	var notify_template = '<div data-notify="container" role="alert" class="col-xs-11 col-sm-2 alert alert-{0}" style="margin: 15px 0 15px 0; width: 150px;">\
@@ -64,7 +64,7 @@
 <div class="main">
 	<div class="data container">
 			<button id='ward' class="btn btn-primary">와드박기</button>
-		<p style="font-size: 2vw;">작성일 : {{ created_at }}</p>
+		<p>작성일 : {{ created_at }}</p>
 		<div class="row">
 			<div class="col">
 				{{ data|safe }}
@@ -85,17 +85,26 @@
 	</div>
 </div>
 
+
 <nav class="navbar bg-primary navbar-dark fixed-bottom">
 	<!-- 댓글 쓰기 -->
 	<!-- {% if user is not none %}
-	<div class="input-group">
-		<input id="comment" type="text" class="form-control" placeholder="댓글 내용">
-		<span class="input-group-btn">
+	 <div class="input-group">
+	 <input id="comment" type="text" class="form-control" placeholder="댓글 내용">
+	 <span class="input-group-btn">
 			<button id="addComment" class="btn btn-primary btn-block" style="border-top-left-radius: 0px; border-bottom-left-radius:0px;" type="button">작성</button>
 		</span>
 	</div>
 	{% endif %} -->
 	<a href="/" class="btn btn-default btn-block text-light">다른 게시물</a>
+	<!-- <div id="other" class="btn btn-default btn-block text-light">다른 게시물</a>
+
+	<script>
+		$('#other').click(function() {
+			alert('zzㅎㅏ위')
+		})
+	    
+	</script> -->
 </nav>
 {% endblock %}
 

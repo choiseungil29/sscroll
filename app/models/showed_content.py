@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String, Integer, DateTime, Enum, ARRAY, ForeignKey
+from sqlalchemy import Column, String, Integer, DateTime, Enum, ARRAY, ForeignKey, Index
 from sqlalchemy.orm import relationship
 
 from datetime import datetime
@@ -20,4 +20,6 @@ class ShowedContent(Base):
     uid = Column(Integer)
     
     created_at = Column(DateTime, default=datetime.now)
+
+    __table_args__ = (Index('ix_uid_cid', "id", "cid"), )
  

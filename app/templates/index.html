@@ -12,6 +12,16 @@
 
 	{% block data %}
 	{% endblock %}
-	</body>
+
+	<script>
+	if (navigator.platform == 'iPhone' || navigator.platform == 'Android') {
+		$('div.data').css('font-size', '5vw');
+		console.log('mobile')
+	} else {
+		$('div.data').css('font-size', '1.5vw');
+		console.log('desktop')
+	}
+	</script>
+</body>
 </html>
 

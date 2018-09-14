@@ -7,6 +7,8 @@ import db
 
 from functools import wraps
 
+import cProfile
+pr = cProfile.Profile()
 
 def route(uri, **kwargs):
 
@@ -14,9 +16,13 @@ def route(uri, **kwargs):
 
         @wraps(fn)
         def decorator(*args, **kwargs):
+            pr.enable()
             context = ApiContext()
             kwargs['context'] = context
-            return fn(*args, **kwargs)
+            res = fn(*args, **kwargs)
+            pr.disable()
+            pr.print_stats(sort='time')
+            return res
         app.add_url_rule(uri, fn.__name__, decorator, **kwargs)
         return decorator
 
