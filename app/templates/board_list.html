@@ -7,12 +7,15 @@
 	<div class="data container">
 		<ul class="list-group">
 		{% for board in boards %}
-		<!-- <li class="list-group-item"><a href="/{{ content.permanent_id }}">{{ content.title }}</a></li> -->
 
 		<li class="list-group-item"><a href="">{{ board.title }}</a></li>
 		{% endfor %}
 		</ul>
 	</div>
 </div>
+
+<nav class="navbar bg-primary navbar-dark fixed-bottom">
+	<a href="/board" class="btn btn-default btn-block text-light">글 작성</a>
+</nav>
 
 {% endblock %}

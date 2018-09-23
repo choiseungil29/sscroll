@@ -3,18 +3,21 @@ import hashlib
 import urllib
 import ujson
 
-from flask import Flask, url_for, redirect, request, session, make_response
+from flask import Flask, url_for, redirect, request, session, make_response, Blueprint
 from bs4 import BeautifulSoup
 
 import db
 
 from datetime import datetime
 from app import app, models
-from decorator import route
+from decorator import router
+
+blueprint_api = Blueprint('api', __name__, url_prefix='/api')
+
+api = router(blueprint_api)
 
 
-# @app.route('/')
-@route('/')
+@api('/')
 def index(context):
     search_range = datetime.utcnow().replace(month=1).replace(day=1).replace(hour=0).replace(minute=0)
 
@@ -27,8 +30,9 @@ def index(context):
     if c.permanent_id != m.hexdigest():
         db.session.delete(c)
         db.session.commit()
-        return redirect(url_for('index'))
+        return redirect(url_for('api.index'))
 
+    res = make_response(redirect(url_for('content', url=c.permanent_id)))
     if context.user is not None:
         # 유저가 존재하면 기록한다.
         showed_content = db.session.query(models.ShowedContent).\
@@ -37,16 +41,29 @@ def index(context):
                 first()
 
         if showed_content is not None:
-            return redirect(url_for('index'))
+            return redirect(url_for('api.index'))
 
         showed_content = models.ShowedContent(uid=context.user.id, content=c)
         db.session.add(showed_content)
+    else:
+        # 쿠키에 있으면 넘김.
+        views = ujson.loads(request.cookies.get('views', ujson.dumps([])))
+        is_view = list(filter(lambda x: x['cid'] == c.permanent_id, views))
+        if len(is_view) > 0:
+            print('already views')
+            return redirect(url_for('api.index'))
+
+        views.append({
+            'cid': c.permanent_id
+        })
+        
+        res.set_cookie('views', ujson.dumps(views))
 
     db.session.commit()
-    return redirect(url_for('content', url=c.permanent_id))
+    return res
 
 
-@route('/<url>/ward', methods=['POST'])
+@api('/<url>/ward', methods=['POST'])
 def set_ward(url, context):
     c = db.session.query(models.Content).\
             filter(models.Content.permanent_id == url).first()
@@ -79,7 +96,7 @@ def set_ward(url, context):
     return res
 
 
-@route('/comment', methods=['POST'])
+@api('/comment', methods=['POST'])
 def comment(context):
     """
     코멘트를 작성하는 API
@@ -96,3 +113,17 @@ def comment(context):
 
     return make_response('댓글 작성 성공')
 
+
+
+
+@api('/logout')
+def logout(context):
+
+    if 'email' in session and 'signup_type' in session:
+        session.pop('email')
+        session.pop('signup_type')
+
+    return redirect(url_for('api.index'))
+
+
+app.register_blueprint(blueprint_api)

@@ -1,0 +1,41 @@
+
+{% extends "index.html" %}
+
+{% block head %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+<link href="http://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.9/summernote.css" rel="stylesheet">
+<script src="http://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.9/summernote.js"></script>
+{% endblock %}
+
+{% block data %}
+<h3 style="padding: 3%"> 쓰크롤 - 게시물 작성</h3>
+<div class="main">
+	<div class="data container">
+		<form method="post">
+			<div class="form-group">
+				<label for="usr">글 제목</label>
+				<input type="text" class="form-control" id="usr">
+			</div>
+			<label for="usr">내용</label>
+			<textarea id="summernote" name="editordata"></textarea>
+		</form>
+	</div>
+</div>
+<nav class="navbar bg-primary navbar-dark fixed-bottom">
+	<div id="edit" href="/board" class="btn btn-default btn-block text-light">게시</a>
+</nav>
+<script>
+$(document).ready(function() {
+	$('#summernote').summernote();
+});
+
+$('#edit').click(function() {
+	$.post('{{request.path}}/board', function(response) {
+		alert('게시되었습니당.');
+		window.location = '/board/1';
+	});
+});
+</script>
+
+{% endblock %}

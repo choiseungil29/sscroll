@@ -1,4 +1,4 @@
-<nav class="navbar bg-primary navbar-dark sticky-top navbar-expand-lg">
+<nav id="header" class="navbar bg-primary navbar-dark sticky-top navbar-expand-lg">
 	<a class="navbar-brand" href="/">쓰크롤</a>
 	<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
 		<span class="navbar-toggler-icon"></span>
@@ -16,3 +16,39 @@
 		</ul>
 	</div>
 </nav>
+
+<script>
+$(document).ready(function () {
+	'use strict';
+
+	var beforeTopPos, currentScrollTop = 0;
+	var header = $('nav#header');
+	var footer = $('nav#footer');
+
+	$(window).scroll(function () {
+		var viewTop = $(window).scrollTop();
+		var navbarHeight = header.height();
+
+		currentScrollTop = viewTop;
+
+		var viewTotalHeight = $('.data').height();
+
+		if ($(window).scrollTop() + window.innerHeight < viewTotalHeight) {
+			if (beforeTopPos < currentScrollTop && viewTop > navbarHeight + navbarHeight) {
+				header.addClass("scrollUp");
+				footer.addClass('scrollDown');
+			} else if (beforeTopPos > currentScrollTop && !(viewTop <= navbarHeight)) {
+				header.removeClass("scrollUp");
+				footer.removeClass('scrollDown');
+			}
+		} else {
+			header.removeClass("scrollUp");
+			footer.removeClass('scrollDown');
+
+		}
+
+		beforeTopPos = currentScrollTop;
+	});
+
+});
+</script>

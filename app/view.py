@@ -2,6 +2,7 @@ import random
 import hashlib
 import urllib
 import ujson
+import requests
 
 from flask import Flask, render_template, url_for, redirect, request, session, make_response
 from bs4 import BeautifulSoup
@@ -11,16 +12,26 @@ import db
 import enums
 
 from datetime import datetime
-from app import app, models
-from decorator import route
+from app import app, models, api
+from decorator import router
+
+view = router(app)
 
 
-@route('/<url>')
+@view('/')
+def view_index(context):
+    headers = request.headers
+    # res = requests.get('http://127.0.0.1:8000/api', headers=headers)
+    res = redirect(url_for('api.index'))
+    return res
+
+
+@view('/<url>')
 def content(url, context):
     c = db.session.query(models.Content).\
             filter(models.Content.permanent_id == url).first()
     if c is None:
-        return redirect(url_for('index'))
+        return redirect(url_for('api.index'))
 
     data = BeautifulSoup(c.data, 'html.parser')
 
@@ -52,23 +63,13 @@ def content(url, context):
 
         img['background-size'] = 'contain'
 
-    '''platform = request.user_agent.platform
-    if platform == 'android' or platform == 'iphone':
-        font_size = '5vw'
-    else:
-        font_size = '1.5vw' '''
-
-    '''comments = filter(lambda x: x.parent_id == None, c.comments)
-    comments = sorted(comments, key=lambda x: x.created_at)'''
-
     data = data.decode()
     db.session.commit()
 
-    return render_template('content.html', title=c.title, data=data, created_at=c.created_at, user=context.user, comments=[])
+    return render_template('content.html', title=c.title, data=data, created_at=c.created_at, user=context.user, comments=c.comments)
 
 
-
-@route('/ward')
+@view('/ward')
 def ward(context):
     contents = []
     if context.user is None:
@@ -84,21 +85,10 @@ def ward(context):
                 all()
 
         contents = [c.content for c in wards]
-    return render_template('ward.html', contents=contents)
 
-@route('/recent')
-def recent(context):
-    contents = db.session.query(models.ShowedContent).\
-            filter(models.ShowedContent.uid == context.user.id).\
-            all()
+    return render_template('ward.html', contents=contents, user=context.user)
 
-    contents = sorted(contents, key=lambda x: x.created_at)
-    contents = contents[::-1]
-
-    return render_template('recent.html', showed_contents=contents)
-
-
-@route('/login', methods=['GET', 'POST'])
+@view('/login', methods=['GET', 'POST'])
 def login(context):
     if request.method == 'GET':
         return render_template('login.html')
@@ -129,22 +119,26 @@ def login(context):
             session['signup_type'] = user.signup_type.name
 
         context.user = user
-        return redirect(url_for('index'))
+        return redirect(url_for('api.index'))
+
+@view('/recent')
+def recent(context):
+    contents = db.session.query(models.ShowedContent).\
+            filter(models.ShowedContent.uid == context.user.id).\
+            all()
+
+    contents = sorted(contents, key=lambda x: x.created_at)
+    contents = contents[::-1]
+
+    return render_template('recent.html', showed_contents=contents, user=context.user)
+
+@view('/board/edit')
+def board_edit(context):
+    return render_template('board_editor.html', user=context.user)
 
 
-@route('/logout')
-def logout(context):
-
-    if 'email' in session and 'signup_type' in session:
-        session.pop('email')
-        session.pop('signup_type')
-
-    return redirect(url_for('index'))
-
-
-
-@route('/board/<int:page>')
-def board(page, context):
+@view('/board/<int:page>')
+def boards(page, context):
     """
     자유게시판
     """
@@ -157,7 +151,7 @@ def board(page, context):
             offset((page - 1) * PAGE_SIZE).\
             all()
 
-    return render_template('board_list.html', boards=boards, page=page)
+    return render_template('board_list.html', boards=boards, page=page, user=context.user)
 
     
     

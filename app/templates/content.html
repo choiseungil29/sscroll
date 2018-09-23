@@ -9,8 +9,7 @@
 	var notify_template = '<div data-notify="container" role="alert" class="col-xs-11 col-sm-2 alert alert-{0}" style="margin: 15px 0 15px 0; width: 150px;">\
 		<button type="button" class="close" data-notify="dismiss" style="top:7px;">\
 			<span aria-hidden="true">x</span>\
-			<span class="sr-only">Close</span>\
-		</button>\
+			<span class="sr-only">Close</span>\ </button>\
 		<span data-notify="icon"></span>\
 		<span data-notify="title">{1}</span>\
 		<span data-notify="message" style="padding-right:15px">{2}</span>\
@@ -41,7 +40,7 @@
 
 	$(document).ready(function() {
 		$('#ward').on('click', function() {
-			$.post('{{request.path }}/ward', function(response) {
+			$.post('/api{{request.path }}/ward', function(response) {
 				notify(response);
 			});
 		});
@@ -86,7 +85,7 @@
 </div>
 
 
-<nav class="navbar bg-primary navbar-dark fixed-bottom">
+<nav id="footer" class="navbar bg-primary navbar-dark fixed-bottom">
 	<!-- 댓글 쓰기 -->
 	<!-- {% if user is not none %}
 	 <div class="input-group">

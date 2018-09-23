@@ -81,7 +81,7 @@ class Dogdrip(Crawler):
         if res is None:
             return
         print(res.title)
-        # self.parse_comments(bs, params, res)
+        self.parse_comments(bs, params, res)
 
     def parse_content(self, bs):
         print('parse content')
@@ -162,6 +162,9 @@ class Dogdrip(Crawler):
             res = scraper.post(url=self.base_url, headers={'Content-Type': 'text/plain'}, data=page_data_format) # TODO: 이부분 gather로 변경
             comment_page = BeautifulSoup(res.text, 'html.parser') # 이게 comments가 들어있는 html
             comments = comment_page.select('.replyItem')
+
+            # import pdb
+            # pdb.set_trace()
 
             for comment in comments:
                 created_at = datetime.strptime(' '.join(comment.select('.date')[0].text.replace('\n', '').replace('\t', '').split(' ')[:2]), '%Y.%m.%d %H:%M:%S') # TODO: date 정확히 구해와야함

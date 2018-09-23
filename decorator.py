@@ -10,23 +10,23 @@ from functools import wraps
 import cProfile
 pr = cProfile.Profile()
 
-def route(uri, **kwargs):
+def router(application, **kwargs):
+    def route(uri, **kwargs):
+        def wrapper(fn):
+            @wraps(fn)
+            def decorator(*args, **kwargs):
+                pr.enable()
+                context = ApiContext()
+                kwargs['context'] = context
+                res = fn(*args, **kwargs)
+                pr.disable()
+                # pr.print_stats(sort='time')
+                return res
+            application.add_url_rule(uri, fn.__name__, decorator, **kwargs)
+            return decorator
 
-    def wrapper(fn):
-
-        @wraps(fn)
-        def decorator(*args, **kwargs):
-            pr.enable()
-            context = ApiContext()
-            kwargs['context'] = context
-            res = fn(*args, **kwargs)
-            pr.disable()
-            pr.print_stats(sort='time')
-            return res
-        app.add_url_rule(uri, fn.__name__, decorator, **kwargs)
-        return decorator
-
-    return wrapper
+        return wrapper
+    return route
 
 
 class ApiContext:
