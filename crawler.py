@@ -81,7 +81,7 @@ class Dogdrip(Crawler):
         if res is None:
             return
         print(res.title)
-        self.parse_comments(bs, params, res)
+        # self.parse_comments(bs, params, res)
 
     def parse_content(self, bs):
         print('parse content')
@@ -119,7 +119,7 @@ class Dogdrip(Crawler):
 
                 if 'transparent' in img['src']:
                     return
-                
+
                 for_img = hashlib.sha256(img['src'].encode())
                 last = img['src'].split('.')[-1]
                 rename = for_img.hexdigest()
@@ -138,7 +138,7 @@ class Dogdrip(Crawler):
             item.created_at = datetime.utcnow() + timedelta(hours=9)
         session.add(item)
         session.commit()
-        print('ad ded!')
+        print('added!')
         return item
 
     def parse_comments(self, bs, params, content):

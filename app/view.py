@@ -2,7 +2,6 @@ import random
 import hashlib
 import urllib
 import ujson
-import requests
 
 from flask import Flask, render_template, url_for, redirect, request, session, make_response
 from bs4 import BeautifulSoup
@@ -21,7 +20,6 @@ view = router(app)
 @view('/')
 def view_index(context):
     headers = request.headers
-    # res = requests.get('http://127.0.0.1:8000/api', headers=headers)
     res = redirect(url_for('api.index'))
     return res
 
@@ -121,6 +119,16 @@ def login(context):
         context.user = user
         return redirect(url_for('api.index'))
 
+@view('/logout')
+def logout(context):
+
+    if 'email' in session and 'signup_type' in session:
+        session.pop('email')
+        session.pop('signup_type')
+
+    return redirect(url_for('api.index'))
+
+
 @view('/recent')
 def recent(context):
     contents = db.session.query(models.ShowedContent).\
@@ -132,12 +140,22 @@ def recent(context):
 
     return render_template('recent.html', showed_contents=contents, user=context.user)
 
+
+@view('/board/<int:bid>')
+def board(bid, context):
+    b = db.session.query(models.Board).\
+            filter(models.Board.id == bid).\
+            first()
+
+    return render_template('board.html', user=context.user, board=b)
+
+
 @view('/board/edit')
 def board_edit(context):
     return render_template('board_editor.html', user=context.user)
 
 
-@view('/board/<int:page>')
+@view('/boards/<int:page>')
 def boards(page, context):
     """
     자유게시판

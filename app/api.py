@@ -2,6 +2,8 @@ import random
 import hashlib
 import urllib
 import ujson
+import boto3
+import base64
 
 from flask import Flask, url_for, redirect, request, session, make_response, Blueprint
 from bs4 import BeautifulSoup
@@ -12,9 +14,16 @@ from datetime import datetime
 from app import app, models
 from decorator import router
 
+from mimetypes import guess_extension
+from urllib.request import urlretrieve
+from config import Config
+
 blueprint_api = Blueprint('api', __name__, url_prefix='/api')
 
 api = router(blueprint_api)
+
+s3 = boto3.client('s3', aws_access_key_id=Config.AWS_ACCESS_KEY_ID, aws_secret_access_key=Config.AWS_SECRET_ACCESS_KEY)
+bucket = 'sichoi-scroll'
 
 
 @api('/')
@@ -96,6 +105,7 @@ def set_ward(url, context):
     return res
 
 
+
 @api('/comment', methods=['POST'])
 def comment(context):
     """
@@ -116,14 +126,34 @@ def comment(context):
 
 
 
-@api('/logout')
-def logout(context):
+@api('/board', methods=['POST'])
+def board(context):
 
-    if 'email' in session and 'signup_type' in session:
-        session.pop('email')
-        session.pop('signup_type')
+    title = request.form['title']
+    content = request.form['content']
+    obj = models.Board(title=title, data=content, uid=context.user.id)
+    html = BeautifulSoup(obj.data, 'html.parser')
+    for img in html.select('img'):
+        if img['src'].startswith('data'):
+            # process
+            data, img_src = img['src'].split(',')
+            mime_type = data[5:].split(';')[0]
+            type = mime_type.split('/')[1]
+            rename = hashlib.sha256(img['data-filename'].encode()).hexdigest()
+            s3.put_object(Body=base64.b64decode(img_src.encode()), Bucket=bucket, Key=f'{rename}.{type}', ACL='public-read')
+            img['src'] = Config.CDN_PATH + f'{rename}.{type}'
+            del img['data-filename']
+            del img['style']
+            print(f'upload {rename}.{type}')
+            print(f'changed {img["src"]}')
+        else:
+            # image download
+            pass
 
-    return redirect(url_for('api.index'))
+    obj.data = html.decode()
 
+    db.session.add(obj)
+    db.session.commit()
 
-app.register_blueprint(blueprint_api)
+    return 'success'
+

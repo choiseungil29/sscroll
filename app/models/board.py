@@ -17,6 +17,7 @@ class Board(Base):
     title = Column(String)
     data = Column(String)
     created_at = Column(DateTime)
+    uid = Column(Integer)
 
     def __init__(self, **kwargs):
         Base.__init__(self, **kwargs)
