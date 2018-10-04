@@ -1,13 +1,18 @@
 
 {% extends "index.html" %}
 
+{% block head %}
+<title>쓰크롤 - 최근 본 게시물</title>
+{% endblock %}
+
 {% block data %}
 <h3 style="padding: 3%"> 쓰크롤 - 최근 본 게시물</h3>
 <div class="main">
 	<div class="data container">
-		<table class="table">
+		<table class="table table-hover">
 			<thead>
 				<tr>
+					<th>#</th>
 					<th>제목</th>
 					<th>게시물 본 시각</th>
 				</tr>
@@ -15,6 +20,7 @@
 		{% for showed in showed_contents %}
 			<tbody>
 				<tr>
+					<td>{{ loop.index }}</td>
 					<td><a href="/{{ showed.content.permanent_id }}">{{ showed.content.title }}</a></td>
 					<td>{{ showed.created_at }}</td>
 				</tr>

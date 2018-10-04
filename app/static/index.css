@@ -15,7 +15,6 @@ div .main {
 }
 
 div .data {
-	padding-bottom: 20%;
 	font-size: 5vw;
 	width: 100%;
 	max-width: 1080px;
@@ -36,7 +35,7 @@ nav#header {
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 9998;
+  z-index: 1021;
   transition: all 0.5s;
 }
 
@@ -52,7 +51,7 @@ nav#footer {
   /* position: fixed; */
   bottom: 0;
   width: 100%;
-  z-index: 9998;
+  z-index: 1021;
   transition: all 0.5s;
 }
 
