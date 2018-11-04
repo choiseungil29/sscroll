@@ -75,6 +75,7 @@ def index(context):
 
 @api('/fill', methods=['GET'])
 def fill(context):
+    print('fill')
     search_range = datetime.utcnow().replace(month=1).replace(day=1).replace(hour=0).replace(minute=0)
 
     all_data = db.session.query(models.Content).\
@@ -91,7 +92,8 @@ def fill(context):
             content = None
             while not_view:
                 content = random.choice(all_data)
-                not_view = len(list(filter(lambda x: x['cid'] == content.permanent_id, views))) == 0
+                not_view = len(list(filter(lambda x: x['cid'] == content.permanent_id, views))) != 0
+
             contents.append(content)
             all_data.remove(content)
         else:
