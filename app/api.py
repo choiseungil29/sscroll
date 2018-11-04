@@ -5,6 +5,8 @@ import ujson
 import boto3
 import base64
 
+from sqlalchemy import or_
+
 from flask import Flask, url_for, redirect, request, session, make_response, Blueprint
 from bs4 import BeautifulSoup
 
@@ -70,6 +72,47 @@ def index(context):
 
     db.session.commit()
     return res
+
+@api('/fill', methods=['GET'])
+def fill(context):
+    search_range = datetime.utcnow().replace(month=1).replace(day=1).replace(hour=0).replace(minute=0)
+
+    all_data = db.session.query(models.Content).\
+            filter(models.Content.created_at > search_range).\
+            all()
+
+    count = 10
+
+    contents = []
+    for _ in range(count):
+        if context.user is None:
+            views = ujson.loads(request.cookies.get('views', ujson.dumps([])))
+            not_view = True
+            content = None
+            while not_view:
+                content = random.choice(all_data)
+                not_view = len(list(filter(lambda x: x['cid'] == content.permanent_id, views))) == 0
+            contents.append(content)
+            all_data.remove(content)
+        else:
+            not_view = True
+            content = None
+            while not_view:
+                content = random.choice(all_data)
+                showed_content = db.session.query(models.ShowedContent).\
+                        filter(models.ShowedContent.uid == context.user.id).\
+                        filter(models.ShowedContent.cid == content.id).\
+                        first()
+                not_view = showed_content is not None
+            contents.append(content)
+            all_data.remove(content)
+    return ujson.dumps([c.to_json() for c in contents])
+
+        
+
+    
+
+
 
 
 @api('/<url>/ward', methods=['POST'])

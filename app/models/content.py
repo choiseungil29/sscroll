@@ -30,4 +30,7 @@ class Content(Base):
             'permanent_id': self.permanent_id,
             'created_at': self.created_at
         }
+    
+    def is_view(self):
+        pass
 

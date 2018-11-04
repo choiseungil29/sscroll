@@ -171,6 +171,9 @@ def boards(page, context):
 
     return render_template('board_list.html', boards=boards, page=page, user=context.user)
 
+@view('/test')
+def tttt(context):
+    return '<div>ㅎㅏ이!</div>'
     
     
     
