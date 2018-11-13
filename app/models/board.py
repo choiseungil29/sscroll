@@ -23,3 +23,11 @@ class Board(Base):
         Base.__init__(self, **kwargs)
 
         self.created_at = datetime.utcnow() + timedelta(hours=9)
+
+    def to_json(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'data': self.data,
+            'created_at': self.created_at
+        }

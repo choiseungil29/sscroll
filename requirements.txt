@@ -9,6 +9,7 @@ click==6.7
 docutils==0.14
 Flask==1.0.2
 Flask-Cors==3.0.4
+gunicorn==19.9.0
 idna==2.6
 itsdangerous==0.24
 Jinja2==2.10
@@ -22,5 +23,6 @@ requests==2.18.4
 s3transfer==0.1.13
 six==1.11.0
 SQLAlchemy==1.2.7
+ujson==1.35
 urllib3==1.22
 Werkzeug==0.14.1

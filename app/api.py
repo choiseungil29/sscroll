@@ -111,7 +111,13 @@ def fill(context):
     return ujson.dumps([c.to_json() for c in contents])
 
         
+@api('/<id>', methods=['GET'])
+def get_content(id, context):
+    content = db.session.query(models.Content).\
+            filter(models.Content.permanent_id == id).\
+            first()
 
+    return ujson.dumps(content.to_json())
     
 
 
@@ -169,9 +175,15 @@ def comment(context):
     return make_response('댓글 작성 성공')
 
 
+@api('/board', methods=['GET'])
+def get_all_board(context):
+    boards = db.session.query(models.Board).\
+            all()
+
+    return ujson.dumps([b.to_json() for b in boards])
 
 
-@api('/board', methods=['POST'])
+'''@api('/board', methods=['POST'])
 def board(context):
 
     title = request.form['title']
@@ -200,5 +212,5 @@ def board(context):
     db.session.add(obj)
     db.session.commit()
 
-    return 'success'
+    return 'success'''
 
