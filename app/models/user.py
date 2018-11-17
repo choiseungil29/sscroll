@@ -17,6 +17,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     signup_type = Column(Enum(enums.SignupTypeEnum))
+    nickname = Column(String)
     email = Column(String)
     access_token = Column(String) # signup_type을 따라가는 token.
 

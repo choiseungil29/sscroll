@@ -4,6 +4,7 @@ import urllib
 import ujson
 import boto3
 import base64
+import enums
 
 from sqlalchemy import or_
 
@@ -72,6 +73,39 @@ def index(context):
 
     db.session.commit()
     return res
+
+@api('/login', methods=['POST'])
+def login(context):
+    token = request.json['accessToken']
+    header = 'Bearer ' + token
+    url = "https://openapi.naver.com/v1/nid/me"
+    req = urllib.request.Request(url)
+    req.add_header("Authorization", header)
+    response = urllib.request.urlopen(req)
+    rescode = response.getcode()
+    if rescode == 200:
+        res = ujson.loads(response.read())
+    else:
+        print("Error Code:" + rescode)
+
+    user = db.session.query(models.User).\
+            filter(models.User.email == res['response']['email']).\
+            filter(models.User.signup_type == enums.SignupTypeEnum.NAVER).\
+            first()
+
+    if user is None:
+        user = models.User(signup_type=enums.SignupTypeEnum.NAVER, email = res['response']['email'], access_token=token)
+        db.session.add(user)
+        db.session.commit()
+    else:
+        session['email'] = user.email
+        session['signup_type'] = user.signup_type.name
+
+    context.user = user
+
+    return 'OK'
+
+
 
 @api('/fill', methods=['GET'])
 def fill(context):
