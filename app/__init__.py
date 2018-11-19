@@ -4,7 +4,7 @@ from flask_cors import CORS
 from config import Config
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
 app.secret_key = Config.SECRET_KEY
 
 from app.api import blueprint_api

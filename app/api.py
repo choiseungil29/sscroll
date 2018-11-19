@@ -75,6 +75,34 @@ def index(context):
     db.session.commit()
     return res
 
+@api('/view', methods=['GET'])
+def view(context):
+    res = make_response()
+    pid = request.args.get('pid')
+    if context.user is None:
+        views = ujson.loads(request.cookies.get('views', ujson.dumps([])))
+        views.append({ 'cid': pid })
+        res.set_cookie('views', ujson.dumps(views))
+        import pdb
+        pdb.set_trace()
+        print(views)
+    else:
+        showed_content = db.session.query(models.ShowedContent).\
+                filter(models.ShowedContent.uid == context.user.id).\
+                filter(models.ShowedContent.cid == pid).\
+                first()
+        if showed_content is None:
+            content = db.session.query(models.Content).\
+                    filter(models.Content.permanent_id == pid).\
+                    first()
+            showed_content = models.ShowedContent(uid=context.user.id, content=content)
+            db.session.add(showed_content)
+            db.session.commit()
+
+    return res
+
+
+
 @api('/login', methods=['POST'])
 def login(context):
     token = request.json['accessToken']
