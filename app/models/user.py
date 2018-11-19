@@ -21,5 +21,10 @@ class User(Base):
     email = Column(String)
     access_token = Column(String) # signup_type을 따라가는 token.
 
-
+    def to_json(self):
+        return {
+            'email': self.email,
+            'signup_type': self.signup_type,
+            'nickname': self.nickname
+        }
 

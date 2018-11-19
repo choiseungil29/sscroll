@@ -1,4 +1,5 @@
 import random
+import string
 import hashlib
 import urllib
 import ujson
@@ -92,19 +93,22 @@ def login(context):
             filter(models.User.email == res['response']['email']).\
             filter(models.User.signup_type == enums.SignupTypeEnum.NAVER).\
             first()
+    status = 200
 
     if user is None:
         user = models.User(signup_type=enums.SignupTypeEnum.NAVER, email = res['response']['email'], access_token=token)
+        N = 12
+        user.nickname = ''.join(random.choices(string.ascii_uppercase + string.digits, k=N))
         db.session.add(user)
         db.session.commit()
-    else:
-        session['email'] = user.email
-        session['signup_type'] = user.signup_type.name
+        status = 201
+
+    session['email'] = user.email
+    session['signup_type'] = user.signup_type.name
 
     context.user = user
 
-    return 'OK'
-
+    return ujson.dumps(user.to_json()), status
 
 
 @api('/fill', methods=['GET'])
@@ -215,6 +219,22 @@ def get_all_board(context):
             all()
 
     return ujson.dumps([b.to_json() for b in boards])
+
+@api('/signup', methods=['POST'])
+def signup(context):
+    print(request.data)
+    req = request.json
+    
+    user = db.session.query(models.User).\
+            filter(models.User.nickname == req['nickname']).\
+            first()
+
+    if user is not None:
+        return 'EXIST', 400
+
+    context.user.nickname = req['nickname']
+    db.session.commit()
+    return 'OK'
 
 
 '''@api('/board', methods=['POST'])
