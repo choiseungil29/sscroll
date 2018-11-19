@@ -83,8 +83,6 @@ def view(context):
         views = ujson.loads(request.cookies.get('views', ujson.dumps([])))
         views.append({ 'cid': pid })
         res.set_cookie('views', ujson.dumps(views))
-        import pdb
-        pdb.set_trace()
         print(views)
     else:
         showed_content = db.session.query(models.ShowedContent).\
