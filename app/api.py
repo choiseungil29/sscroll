@@ -31,6 +31,9 @@ bucket = 'sichoi-scroll'
 
 
 @api('/')
+def test(context):
+    return 'hi!'
+'''@api('/')
 def index(context):
     search_range = datetime.utcnow().replace(month=1).replace(day=1).replace(hour=0).replace(minute=0)
 
@@ -74,6 +77,7 @@ def index(context):
 
     db.session.commit()
     return res
+'''
 
 @api('/view', methods=['GET'])
 def view(context):
@@ -85,14 +89,15 @@ def view(context):
         res.set_cookie('views', ujson.dumps(views))
         print(views)
     else:
+        content = db.session.query(models.Content).\
+                filter(models.Content.permanent_id == pid).\
+                first()
         showed_content = db.session.query(models.ShowedContent).\
                 filter(models.ShowedContent.uid == context.user.id).\
-                filter(models.ShowedContent.cid == pid).\
+                filter(models.ShowedContent.cid == content.id).\
                 first()
         if showed_content is None:
-            content = db.session.query(models.Content).\
-                    filter(models.Content.permanent_id == pid).\
-                    first()
+            
             showed_content = models.ShowedContent(uid=context.user.id, content=content)
             db.session.add(showed_content)
             db.session.commit()
