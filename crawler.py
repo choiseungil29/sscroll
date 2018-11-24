@@ -129,6 +129,9 @@ class Dogdrip(Crawler):
                 os.remove(rename)
                 img['src'] = 'http://d3q9984fv14hvr.cloudfront.net/' + rename
             content = content.decode()
+            import pdb
+            pdb.set_trace()
+            print('what')
         except Exception as e:
             print(e)
             print('what')

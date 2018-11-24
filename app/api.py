@@ -177,6 +177,28 @@ def fill(context):
                 not_view = showed_content is not None
             contents.append(content)
             all_data.remove(content)
+
+    '''for c in contents:
+        data = BeautifulSoup(c.data)
+        key = lambda value: value and 'background-color' in value
+        tags = data.findAll('p', style=key) + data.findAll('span', style=key)
+        for text in tags:
+            import pdb
+            pdb.set_trace()
+            if 'style' not in text:
+                continue
+            styles = text['style'].split(';')
+            selector = []
+            import pdb
+            pdb.set_trace()
+            for style in styles:
+                if 'background-color' in style:
+                    continue
+                selector.append(style)
+            text['style'] = ';'.join(selector)
+            print(text)
+            import pdb
+            pdb.set_trace()'''
     return ujson.dumps([c.to_json() for c in contents])
 
         
