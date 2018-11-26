@@ -88,7 +88,9 @@ class Dogdrip(Crawler):
         try:
             new = bs
             title = new.select('h4')[0].text
-            m = hashlib.sha256(title.encode())
+            # m = hashlib.sha256(title.encode())
+            m = hashlib.blake2b(digest_size=12)
+            m.update(title.encode())
             hashed = m.hexdigest()
 
             date = None
@@ -129,9 +131,9 @@ class Dogdrip(Crawler):
                 os.remove(rename)
                 img['src'] = 'http://d3q9984fv14hvr.cloudfront.net/' + rename
             content = content.decode()
-            import pdb
+            '''import pdb
             pdb.set_trace()
-            print('what')
+            print('what')'''
         except Exception as e:
             print(e)
             print('what')
