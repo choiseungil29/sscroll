@@ -4,6 +4,7 @@ import requests
 import hashlib
 import urllib.request
 import urllib.error
+import urllib.parse as urlparse
 import boto3
 import os
 import cfscrape
@@ -80,15 +81,14 @@ class Dogdrip(Crawler):
         res = self.parse_content(bs)
         if res is None:
             return
+        res = self.parse_comments(bs, res, params)
         print(res.title)
-        # self.parse_comments(bs, params, res)
 
     def parse_content(self, bs):
         print('parse content')
         try:
             new = bs
             title = new.select('h4')[0].text
-            # m = hashlib.sha256(title.encode())
             m = hashlib.blake2b(digest_size=12)
             m.update(title.encode())
             hashed = m.hexdigest()
@@ -131,9 +131,6 @@ class Dogdrip(Crawler):
                 os.remove(rename)
                 img['src'] = 'http://d3q9984fv14hvr.cloudfront.net/' + rename
             content = content.decode()
-            '''import pdb
-            pdb.set_trace()
-            print('what')'''
         except Exception as e:
             print(e)
             print('what')
@@ -146,71 +143,50 @@ class Dogdrip(Crawler):
         print('added!')
         return item
 
-    def parse_comments(self, bs, params, content):
-        print('parse comments!')
-        try:
-            last_page = int(bs.select('div.replyBox > div.pagination.a1 > strong')[0].text)
-        except:
-            last_page = 1
+    def parse_comments(self, bs, content, params):
+        comments = session.query(models.Comment).\
+                filter(models.Comment.cid == content.id).\
+                all()
 
-        for i in range(last_page):
-            page = i+1
-            page_data_format = f'''<?xml version="1.0" encoding="utf-8" ?>
-            <methodCall>
-            <params>
-            <document_srl><![CDATA[{params['document_srl']}]]></document_srl>
-            <mid><![CDATA[dogdrip]]></mid>
-            <cpage><![CDATA[{page}]]></cpage>
-            <module><![CDATA[board]]></module>
-            </params>
-            </methodCall>'''
-            res = scraper.post(url=self.base_url, headers={'Content-Type': 'text/plain'}, data=page_data_format) # TODO: 이부분 gather로 변경
-            comment_page = BeautifulSoup(res.text, 'html.parser') # 이게 comments가 들어있는 html
-            comments = comment_page.select('.replyItem')
+        if len(comments) > 0:
+            return
 
-            # import pdb
-            # pdb.set_trace()
+        comment_top = bs.find('div', id='comment_top')
+        last_page = self.get_comment_last_page(comment_top)
+        for i in range(last_page + 1):
+            param = params
+            params['cpage'] = i
+            res = BeautifulSoup(requests.get(self.base_url, params).text, 'html.parser')
+            comment_list = res.find('div', id='commentbox').find('div', attrs={'class': 'comment-list'})
+            for comment_box in comment_list.findAll(lambda x: x.name == 'div' and 'class' in x.attrs and 'depth' not in x.attrs['class'] and 'comment-item' in x.attrs['class']):
+                print('하위')
+                box = comment_box.select('> div')[0].select('> div')[0]
 
-            for comment in comments:
-                created_at = datetime.strptime(' '.join(comment.select('.date')[0].text.replace('\n', '').replace('\t', '').split(' ')[:2]), '%Y.%m.%d %H:%M:%S') # TODO: date 정확히 구해와야함
-                text = comment.select('.comment')[0].text
-                permanent_id = comment.select('a[name]')[0]['name'].split('_')[1]
-
-                comment_obj = session.query(models.Comment).\
-                        filter(models.Comment.permanent_id == permanent_id).\
-                        first()
-
-                if comment_obj is not None:
-                    print('comment already proceed')
-                    continue
-
-                parent_id = None
-                if 'parent_srl' in comment.attrs:
-                    parent_comment = session.query(models.Comment).\
-                            filter(models.Comment.permanent_id == int(comment['parent_srl'])).\
-                            first()
-                    parent_id = parent_comment.id
-                comment_obj = models.Comment(data=text, created_at=created_at, permanent_id=permanent_id, parent_id=parent_id)
-                comment_obj.cid = content.id
-                session.add(comment_obj)
+                text = box.find('div', attrs={'class': 'xe_content'}).text
+                created_at = datetime.utcnow() + timedelta(hours=9)
+                try:
+                    created_at = datetime.strptime(box.find('div').findAll('div')[-1].find('span').text, '%Y.%m.%d')
+                except:
+                    pass
+                comment = models.Comment(data=text, cid=content.id, created_at=created_at)
+                session.add(comment)
                 session.flush()
-                # TODO: comment to comment의 relationship 정리 후 DB에create
-                # 댓글 정렬 방법
-                # 1. parent_comment가 없는 애들을 다 가져온다
-                # 2. 다 가져와서 created_at 으로 정렬
-                # 3. comment들의 child조사
-                # 4. child를 created_at 순서대로 끼워넣어준다
-                # 5. child를 대상으로 3->4 반복.
-                # parent = 
                 print(text)
+
         session.commit()
+
+    def get_comment_last_page(self, bs):
+        comment_pages = bs.findAll(lambda x: x.name == 'a' and 'href' in x.attrs and '#comment' in x.attrs['href'])
+        parsed = urlparse.urlparse(comment_pages[-1]['href'])
+        qs = urlparse.parse_qs(parsed.query)
+        return int(qs['cpage'][0]) + 1
 
     async def run(self):
         a = time.time()
 
         fts = []
         for x in range(263):
-            fts.append(asyncio.ensure_future(self.fetch_content_urls({'mid': 'dogdrip', 'page': x, 'sort_index': 'popular'})))
+            fts.append(asyncio.ensure_future(self.fetch_content_urls({'mid': 'dogdrip', 'page': x, 'sort_index': 'popular', 'cpage': 1})))
 
         await asyncio.gather(*fts)
         b = time.time()
@@ -221,6 +197,7 @@ class Dogdrip(Crawler):
         for c in self.contents:
             k, v = c.split('=')
             fts.append(asyncio.ensure_future(self.fetch_contents({k: v})))
+            # fts.append(asyncio.ensure_future(self.fetch_contents({k: '115890448'})))
 
         await asyncio.gather(*fts)
 
