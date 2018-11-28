@@ -162,7 +162,10 @@ class Dogdrip(Crawler):
                 if box is None:
                     continue
 
-                text = box.find('div', attrs={'class': 'xe_content'}).text
+                text = box.find('div', attrs={'class': 'xe_content'})
+                if text is None:
+                    continue
+                text = text.text
                 created_at = datetime.utcnow() + timedelta(hours=9)
                 try:
                     created_at = datetime.strptime(box.find('div').findAll('div')[-1].find('span').text, '%Y.%m.%d')
