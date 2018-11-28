@@ -23,4 +23,8 @@ class Comment(Base):
     parent_id = Column(Integer, ForeignKey('comments.id'))
     children = relationship('Comment', lazy='joined')
 
+    def to_json(self):
+        return {
+            'data': self.data
+        }
 

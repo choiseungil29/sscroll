@@ -28,7 +28,8 @@ class Content(Base):
             'title': self.title,
             'data': self.data,
             'permanent_id': self.permanent_id,
-            'created_at': self.created_at
+            'created_at': self.created_at,
+            'comments': [c.to_json() for c in self.comments]
         }
     
     def is_view(self):
