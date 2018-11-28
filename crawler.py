@@ -82,7 +82,6 @@ class Dogdrip(Crawler):
         if res is None:
             return
         res = self.parse_comments(bs, res, params)
-        print(res.title)
 
     def parse_content(self, bs):
         print('parse content')
@@ -150,7 +149,6 @@ class Dogdrip(Crawler):
 
         if len(comments) > 0:
             return
-
         comment_top = bs.find('div', id='comment_top')
         last_page = self.get_comment_last_page(comment_top)
         for i in range(last_page + 1):
@@ -159,8 +157,10 @@ class Dogdrip(Crawler):
             res = BeautifulSoup(requests.get(self.base_url, params).text, 'html.parser')
             comment_list = res.find('div', id='commentbox').find('div', attrs={'class': 'comment-list'})
             for comment_box in comment_list.findAll(lambda x: x.name == 'div' and 'class' in x.attrs and 'depth' not in x.attrs['class'] and 'comment-item' in x.attrs['class']):
-                print('하위')
+                print('4')
                 box = comment_box.select('> div')[0].select('> div')[0]
+                if box is None:
+                    continue
 
                 text = box.find('div', attrs={'class': 'xe_content'}).text
                 created_at = datetime.utcnow() + timedelta(hours=9)
@@ -174,11 +174,15 @@ class Dogdrip(Crawler):
                 print(text)
 
         session.commit()
+        return content
 
     def get_comment_last_page(self, bs):
-        comment_pages = bs.findAll(lambda x: x.name == 'a' and 'href' in x.attrs and '#comment' in x.attrs['href'])
-        parsed = urlparse.urlparse(comment_pages[-1]['href'])
-        qs = urlparse.parse_qs(parsed.query)
+        try:
+            comment_pages = bs.findAll(lambda x: x.name == 'a' and 'href' in x.attrs and '#comment' in x.attrs['href'])
+            parsed = urlparse.urlparse(comment_pages[-1]['href'])
+            qs = urlparse.parse_qs(parsed.query)
+        except:
+            return 1
         return int(qs['cpage'][0]) + 1
 
     async def run(self):
