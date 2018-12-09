@@ -7,7 +7,7 @@ import boto3
 import base64
 import enums
 
-from sqlalchemy import or_
+from sqlalchemy import or_, desc
 
 from flask import Flask, url_for, redirect, request, session, make_response, Blueprint
 from bs4 import BeautifulSoup
@@ -53,6 +53,18 @@ def view(context):
 
     return res
 
+
+@api('/recent', methods=['GET'])
+def recent(context):
+    if context.user is None:
+        raise
+
+    recents = db.session.query(models.ShowedContent).\
+            filter(models.ShowedContent.uid == context.user.id).\
+            order_by(desc(models.ShowedContent.created_at)).\
+            all()
+
+    return ujson.dumps([recent.to_json() for recent in recents])
 
 
 @api('/login', methods=['POST'])
