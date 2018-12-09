@@ -33,62 +33,12 @@ bucket = 'sichoi-scroll'
 @api('/')
 def test(context):
     return 'hi!'
-'''@api('/')
-def index(context):
-    search_range = datetime.utcnow().replace(month=1).replace(day=1).replace(hour=0).replace(minute=0)
-
-    all_data = db.session.query(models.Content).\
-            filter(models.Content.created_at > search_range).\
-            all()
-
-    c = random.choice(all_data)
-    m = hashlib.sha256(c.title.encode())
-    if c.permanent_id != m.hexdigest():
-        db.session.delete(c)
-        db.session.commit()
-        return redirect(url_for('api.index'))
-
-    res = make_response(redirect(url_for('content', url=c.permanent_id)))
-    if context.user is not None:
-        # 유저가 존재하면 기록한다.
-        showed_content = db.session.query(models.ShowedContent).\
-                filter(models.ShowedContent.uid == context.user.id).\
-                filter(models.ShowedContent.cid == c.id).\
-                first()
-
-        if showed_content is not None:
-            return redirect(url_for('api.index'))
-
-        showed_content = models.ShowedContent(uid=context.user.id, content=c)
-        db.session.add(showed_content)
-    else:
-        # 쿠키에 있으면 넘김.
-        views = ujson.loads(request.cookies.get('views', ujson.dumps([])))
-        is_view = list(filter(lambda x: x['cid'] == c.permanent_id, views))
-        if len(is_view) > 0:
-            print('already views')
-            return redirect(url_for('api.index'))
-
-        views.append({
-            'cid': c.permanent_id
-        })
-        
-        res.set_cookie('views', ujson.dumps(views))
-
-    db.session.commit()
-    return res
-'''
 
 @api('/view', methods=['GET'])
 def view(context):
     res = make_response()
     pid = request.args.get('pid')
-    if context.user is None:
-        views = ujson.loads(request.cookies.get('views', ujson.dumps([])))
-        views.append({ 'cid': pid })
-        res.set_cookie('views', ujson.dumps(views))
-        print(views)
-    else:
+    if context.user is not None:
         content = db.session.query(models.Content).\
                 filter(models.Content.permanent_id == pid).\
                 first()
@@ -97,7 +47,6 @@ def view(context):
                 filter(models.ShowedContent.cid == content.id).\
                 first()
         if showed_content is None:
-            
             showed_content = models.ShowedContent(uid=context.user.id, content=content)
             db.session.add(showed_content)
             db.session.commit()
@@ -156,12 +105,12 @@ def fill(context):
     contents = []
     for _ in range(count):
         if context.user is None:
-            views = ujson.loads(request.cookies.get('views', ujson.dumps([])))
+            views = ujson.loads(request.args.get('views'))['views']
             not_view = True
             content = None
             while not_view:
                 content = random.choice(all_data)
-                not_view = len(list(filter(lambda x: x['cid'] == content.permanent_id, views))) != 0
+                not_view = len(list(filter(lambda x: x == content.permanent_id, views))) != 0
 
             contents.append(content)
             all_data.remove(content)
@@ -177,28 +126,7 @@ def fill(context):
                 not_view = showed_content is not None
             contents.append(content)
             all_data.remove(content)
-
-    '''for c in contents:
-        data = BeautifulSoup(c.data)
-        key = lambda value: value and 'background-color' in value
-        tags = data.findAll('p', style=key) + data.findAll('span', style=key)
-        for text in tags:
-            import pdb
-            pdb.set_trace()
-            if 'style' not in text:
-                continue
-            styles = text['style'].split(';')
-            selector = []
-            import pdb
-            pdb.set_trace()
-            for style in styles:
-                if 'background-color' in style:
-                    continue
-                selector.append(style)
-            text['style'] = ';'.join(selector)
-            print(text)
-            import pdb
-            pdb.set_trace()'''
+    
     return ujson.dumps([c.to_json() for c in contents])
 
         
@@ -210,9 +138,6 @@ def get_content(id, context):
 
     return ujson.dumps(content.to_json())
     
-
-
-
 
 @api('/<url>/ward', methods=['POST'])
 def set_ward(url, context):
