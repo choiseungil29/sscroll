@@ -192,7 +192,7 @@ class Dogdrip(Crawler):
         a = time.time()
 
         fts = []
-        for x in range(263):
+        for x in range(500):
             fts.append(asyncio.ensure_future(self.fetch_content_urls({'mid': 'dogdrip', 'page': x, 'sort_index': 'popular', 'cpage': 1})))
 
         await asyncio.gather(*fts)
