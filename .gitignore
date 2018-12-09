@@ -112,3 +112,6 @@ config.py
 *.log
 
 .vscode/
+
+*.jpg
+*.png
