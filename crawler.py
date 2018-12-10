@@ -166,6 +166,8 @@ class Dogdrip(Crawler):
                 if text is None:
                     continue
                 text = text.text
+                if text == '':
+                    continue
                 created_at = datetime.utcnow() + timedelta(hours=9)
                 try:
                     created_at = datetime.strptime(box.find('div').findAll('div')[-1].find('span').text, '%Y.%m.%d')
