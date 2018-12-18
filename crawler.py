@@ -128,7 +128,7 @@ class Dogdrip(Crawler):
                 rename = for_img.hexdigest()
                 rename += '.' + last
                 urllib.request.urlretrieve(img['src'], rename)
-                s3.upload_file(rename, bucket, rename, ExtraArgs={'ACL': 'public-read', 'CacheControl': 'max-age=86400'})
+                s3.upload_file(rename, bucket, rename, ExtraArgs={'ACL': 'public-read', 'CacheControl': 'max-age=2592000'})
                 os.remove(rename)
                 img['src'] = 'http://d3q9984fv14hvr.cloudfront.net/' + rename
             content = content.decode()
