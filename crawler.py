@@ -8,6 +8,7 @@ import urllib.parse as urlparse
 import boto3
 import os
 import cfscrape
+import traceback
 
 from functools import partial
 from bs4 import BeautifulSoup
@@ -50,7 +51,7 @@ class Crawler:
     async def fetch(self, partial_method):
         print(partial_method)
         res = await loop.run_in_executor(None, partial_method)
-        return BeautifulSoup(res.text, 'html.parser')
+        return BeautifulSoup(res.text.encode(), 'html.parser')
 
 
 class Dogdrip(Crawler):
@@ -82,6 +83,7 @@ class Dogdrip(Crawler):
         if res is None:
             return
         res = self.parse_comments(bs, res, params)
+        print(res.title)
 
     def parse_content(self, bs):
         print('parse content')
@@ -126,13 +128,13 @@ class Dogdrip(Crawler):
                 rename = for_img.hexdigest()
                 rename += '.' + last
                 urllib.request.urlretrieve(img['src'], rename)
-                s3.upload_file(rename, bucket, rename, ExtraArgs={'ACL': 'public-read'})
+                s3.upload_file(rename, bucket, rename, ExtraArgs={'ACL': 'public-read', 'CacheControl': 'max-age=86400'})
                 os.remove(rename)
                 img['src'] = 'http://d3q9984fv14hvr.cloudfront.net/' + rename
             content = content.decode()
         except Exception as e:
-            print(e)
-            print('what')
+            print('exit')
+            traceback.print_tb(e.__traceback__)
             return
         item = models.Content(title=title, data=content, permanent_id=hashed, created_at=date, origin=enums.DataOriginEnum.DOGDRIP)
         if item.created_at is None:
@@ -148,7 +150,9 @@ class Dogdrip(Crawler):
                 all()
 
         if len(comments) > 0:
+            print('alread updated')
             return
+        
         comment_top = bs.find('div', id='comment_top')
         last_page = self.get_comment_last_page(comment_top)
         for i in range(last_page + 1):
@@ -157,21 +161,13 @@ class Dogdrip(Crawler):
             res = BeautifulSoup(requests.get(self.base_url, params).text, 'html.parser')
             comment_list = res.find('div', id='commentbox').find('div', attrs={'class': 'comment-list'})
             for comment_box in comment_list.findAll(lambda x: x.name == 'div' and 'class' in x.attrs and 'depth' not in x.attrs['class'] and 'comment-item' in x.attrs['class']):
-                print('4')
                 box = comment_box.select('> div')[0].select('> div')[0]
-                if box is None:
-                    continue
 
-                text = box.find('div', attrs={'class': 'xe_content'})
-                if text is None:
-                    continue
-                text = text.text
-                if text == '':
-                    continue
+                text = box.find('div', attrs={'class': 'xe_content'}).text
                 created_at = datetime.utcnow() + timedelta(hours=9)
                 try:
                     created_at = datetime.strptime(box.find('div').findAll('div')[-1].find('span').text, '%Y.%m.%d')
-                except:
+                except Exception as e:
                     pass
                 comment = models.Comment(data=text, cid=content.id, created_at=created_at)
                 session.add(comment)
@@ -179,14 +175,13 @@ class Dogdrip(Crawler):
                 print(text)
 
         session.commit()
-        return content
 
     def get_comment_last_page(self, bs):
         try:
             comment_pages = bs.findAll(lambda x: x.name == 'a' and 'href' in x.attrs and '#comment' in x.attrs['href'])
             parsed = urlparse.urlparse(comment_pages[-1]['href'])
             qs = urlparse.parse_qs(parsed.query)
-        except:
+        except Exception as e:
             return 1
         return int(qs['cpage'][0]) + 1
 
@@ -194,7 +189,7 @@ class Dogdrip(Crawler):
         a = time.time()
 
         fts = []
-        for x in range(500):
+        for x in range(263):
             fts.append(asyncio.ensure_future(self.fetch_content_urls({'mid': 'dogdrip', 'page': x, 'sort_index': 'popular', 'cpage': 1})))
 
         await asyncio.gather(*fts)
