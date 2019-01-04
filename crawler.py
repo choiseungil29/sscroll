@@ -24,7 +24,7 @@ import enums
 from config import Config
 
 s3 = boto3.client('s3', aws_access_key_id=Config.AWS_ACCESS_KEY_ID, aws_secret_access_key=Config.AWS_SECRET_ACCESS_KEY)
-bucket = 'sichoi-scroll'
+bucket = 'img.sscroll.net'
 
 opener = urllib.request.build_opener()
 opener.addheaders = [
@@ -128,9 +128,9 @@ class Dogdrip(Crawler):
                 rename = for_img.hexdigest()
                 rename += '.' + last
                 urllib.request.urlretrieve(img['src'], rename)
-                s3.upload_file(rename, bucket, rename, ExtraArgs={'ACL': 'public-read', 'CacheControl': 'max-age=2592000'})
+                s3.upload_file(rename, bucket, 'upload/' + rename, ExtraArgs={'ACL': 'public-read', 'CacheControl': 'max-age=2592000'})
                 os.remove(rename)
-                img['src'] = 'http://d3q9984fv14hvr.cloudfront.net/' + rename
+                img['src'] = 'http://img.sscroll.net/upload/'+ rename
             content = content.decode()
         except Exception as e:
             print('exit')

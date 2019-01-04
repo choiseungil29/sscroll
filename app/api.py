@@ -112,7 +112,7 @@ def fill(context):
             filter(models.Content.created_at > search_range).\
             all()
 
-    count = 10
+    count = 3
 
     contents = []
     for _ in range(count):
