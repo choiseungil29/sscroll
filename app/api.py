@@ -53,9 +53,17 @@ def view(context):
 
     return res
 
-@api('/fake', methods=['GET'])
+@api('/renew', methods=['GET'])
 def fake(context):
-    return render_template('fake.html', data=None)
+    search_range = datetime.utcnow().replace(month=1).replace(day=1).replace(hour=0).replace(minute=0)
+
+    all_data = db.session.query(models.Content).\
+            filter(models.Content.created_at > search_range).\
+            all()
+    
+    random.choice(all_data)
+
+    return render_template('renew.html', data=random.choice(all_data).to_json())
 
 
 @api('/recent', methods=['GET'])
