@@ -9,7 +9,7 @@ import enums
 
 from sqlalchemy import or_, desc
 
-from flask import Flask, url_for, redirect, request, session, make_response, Blueprint
+from flask import Flask, url_for, redirect, request, session, make_response, Blueprint, render_template
 from bs4 import BeautifulSoup
 
 import db
@@ -52,6 +52,10 @@ def view(context):
             db.session.commit()
 
     return res
+
+@api('/fake', methods=['GET'])
+def fake(context):
+    return render_template('fake.html', data=None)
 
 
 @api('/recent', methods=['GET'])
@@ -117,7 +121,8 @@ def fill(context):
     contents = []
     for _ in range(count):
         if context.user is None:
-            views = ujson.loads(request.args.get('views'))['views']
+            # views = ujson.loads(request.args.get('views'))['views']
+            views = []
             not_view = True
             content = None
             while not_view:
