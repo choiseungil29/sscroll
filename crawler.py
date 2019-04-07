@@ -7,6 +7,7 @@ import urllib.error
 import urllib.parse as urlparse
 import boto3
 import os
+import re
 import cfscrape
 import traceback
 
@@ -76,8 +77,8 @@ class Dogdrip(Crawler):
                 self.contents.append(l)
 
     async def fetch_contents(self, params):
-        # bs = await Crawler.fetch(self, partial(scraper.get, url=self.base_url, params=params))
-        bs = BeautifulSoup(requests.get(self.base_url, params).text, 'html.parser')
+        bs = await Crawler.fetch(self, partial(scraper.get, url=self.base_url, params=params))
+        # bs = BeautifulSoup(requests.get(self.base_url, params).text, 'html.parser')
 
         res = self.parse_content(bs)
         if res is None:
@@ -90,6 +91,9 @@ class Dogdrip(Crawler):
         try:
             new = bs
             title = new.select('h4')[0].text
+
+            if '썰' not in title:
+                return None
             m = hashlib.blake2b(digest_size=12)
             m.update(title.encode())
             hashed = m.hexdigest()
@@ -106,6 +110,31 @@ class Dogdrip(Crawler):
                 session.commit()
                 print('passed')
                 return exist
+            
+            date = new.select('div.ed.flex.flex-wrap.flex-left.flex-middle.title-toolbar span.ed.text-xsmall.text-muted')[-1].text
+
+            delta = None
+            if '일 전' in date:
+                delta = timedelta(days=int(date[0]))
+            if '시간 전' in date:
+                delta = timedelta(hours=int(date[0]))
+            if '분 전' in date:
+                delta = timedelta(minutes=int(date[0]))
+            
+            if delta is not None:
+                date = datetime.utcnow() + timedelta(hours=9) - delta
+            else:
+                date = datetime.strptime(date, '%Y.%m.%d')
+            
+            writer = new.select(' div.ed.flex.flex-wrap.flex-left.flex-middle.title-toolbar > div.ed.flex.flex-wrap a')[0].text
+            writer = hashlib.shake_128(writer.encode()).hexdigest(length=4)
+
+            user = models.User(nickname=writer)
+            session.add(user)
+            session.flush()
+
+            # TODO 2: 작성자 아이디 구해와서 해싱
+            # DOIT!
 
             content = new.select('div#article_1')[0]
             length = len(content.select('img'))
@@ -136,9 +165,14 @@ class Dogdrip(Crawler):
             print('exit')
             traceback.print_tb(e.__traceback__)
             return
-        item = models.Content(title=title, data=content, permanent_id=hashed, created_at=date, origin=enums.DataOriginEnum.DOGDRIP)
+        item = models.Content(title=title, data=content, permanent_id=hashed, created_at=date, origin=enums.DataOriginEnum.DOGDRIP, uid=user.id)
         if item.created_at is None:
             item.created_at = datetime.utcnow() + timedelta(hours=9)
+        
+        data = new.select('script[type="text/javascript"]')[0].text
+        up, down = filter(lambda x: x != '', re.compile('[0-9]*').findall(data))
+        item.up = up
+        item.down = down
         session.add(item)
         session.commit()
         print('added!')
@@ -155,26 +189,60 @@ class Dogdrip(Crawler):
         
         comment_top = bs.find('div', id='comment_top')
         last_page = self.get_comment_last_page(comment_top)
+        before_comment = None
         for i in range(last_page + 1):
             param = params
             params['cpage'] = i
             res = BeautifulSoup(requests.get(self.base_url, params).text, 'html.parser')
             comment_list = res.find('div', id='commentbox').find('div', attrs={'class': 'comment-list'})
-            for comment_box in comment_list.findAll(lambda x: x.name == 'div' and 'class' in x.attrs and 'depth' not in x.attrs['class'] and 'comment-item' in x.attrs['class']):
+            # for comment_box in comment_list.findAll(lambda x: x.name == 'div' and 'class' in x.attrs and 'depth' not in x.attrs['class'] and 'comment-item' in x.attrs['class']):
+            for comment_box in comment_list.findAll(lambda x: x.name == 'div' and 'class' in x.attrs and 'comment-item' in x.attrs['class']):
                 box = comment_box.select('> div')[0].select('> div')[0]
 
                 text = box.find('div', attrs={'class': 'xe_content'}).text
-                created_at = datetime.utcnow() + timedelta(hours=9)
-                try:
-                    created_at = datetime.strptime(box.find('div').findAll('div')[-1].find('span').text, '%Y.%m.%d')
-                except Exception as e:
-                    pass
-                comment = models.Comment(data=text, cid=content.id, created_at=created_at)
+                if not text:
+                    before_comment = None
+                    continue
+                date = box.find('div').findAll('div')[-1].find('span').text
+                delta = None
+                if '일 전' in date:
+                    delta = timedelta(days=int(date[0]))
+                if '시간 전' in date:
+                    delta = timedelta(hours=int(date[0]))
+                if '분 전' in date:
+                    delta = timedelta(minutes=int(date[0]))
+
+                if delta is not None:
+                    date = datetime.utcnow() + timedelta(hours=9) - delta
+                else:
+                    date = datetime.strptime(date, '%Y.%m.%d')
+                
+                writer = box.select('a.ed.link-reset')[0].text
+                writer = hashlib.shake_128(writer.encode()).hexdigest(length=4)
+
+                user = session.query(models.User).\
+                    filter(models.User.nickname == writer).\
+                    first()
+                
+                if user is None:
+                    user = models.User(nickname=writer)
+                    session.add(user)
+                    session.flush()
+                
+                comment = models.Comment(data=text, cid=content.id, created_at=date, uid=user.id)
+                if 'depth' in comment_box.attrs['class'] and before_comment:
+                    target = box.select('span.ed.label-primary')[0].text.strip()[1:]
+                    target = hashlib.shake_128(target.encode()).hexdigest(length=4)
+                    comment.data = f'@{target} {comment.data}'
+                    comment.parent_id = before_comment.id
+                else:
+                    before_comment = comment
                 session.add(comment)
                 session.flush()
                 print(text)
 
         session.commit()
+        return content
 
     def get_comment_last_page(self, bs):
         try:
@@ -201,7 +269,6 @@ class Dogdrip(Crawler):
         for c in self.contents:
             k, v = c.split('=')
             fts.append(asyncio.ensure_future(self.fetch_contents({k: v})))
-            # fts.append(asyncio.ensure_future(self.fetch_contents({k: '115890448'})))
 
         await asyncio.gather(*fts)
 
