@@ -188,16 +188,22 @@ def comment(context):
     코멘트를 작성하는 API
     작성 후 맨 아래로 스크롤되어짐
     """
-    permanent_id = request.form['permanent_id']
-    content = db.session.query(models.Content).\
-            filter(models.Content.permanent_id == permanent_id).\
-            first()
 
-    comment = models.Comment(created_at=datetime.now(), uid=context.user.id, data=request.form['data'], cid=content.id)
+    permanent_id = request.json['content_pid']
+    comment_data = request.json['comment']
+
+    content = db.session.query(models.Content).\
+        filter(models.Content.permanent_id == permanent_id).\
+        first()
+
+    comment = models.Comment(created_at=datetime.now(), uid=context.user.id, data=comment_data, cid=content.id)
+
+    if 'parent_id' in request.json:
+        comment.parent_id = request.json['parent_id']
     db.session.add(comment)
     db.session.commit()
 
-    return make_response('댓글 작성 성공')
+    return ujson.dumps(comment.to_json())
 
 
 @api('/board', methods=['GET'])
