@@ -38,6 +38,7 @@ class Content(Base):
             first()
 
         return {
+            'id': self.id,
             'title': self.title,
             'data': self.data,
             'permanent_id': self.permanent_id,
@@ -46,7 +47,8 @@ class Content(Base):
             'up': self.up,
             'down': self.down,
             'date': self.created_at.strftime('%Y.%m.%d'),
-            'user': user.to_json()
+            'user': user.to_json(),
+            'type': self.origin
         }
     
     def is_view(self):

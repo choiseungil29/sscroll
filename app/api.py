@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 
 import db
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from app import app, models
 from decorator import router
 
@@ -230,12 +230,17 @@ def signup(context):
     return 'OK'
 
 
-'''@api('/board', methods=['POST'])
+@api('/board', methods=['POST'])
 def board(context):
 
-    title = request.form['title']
-    content = request.form['content']
-    obj = models.Board(title=title, data=content, uid=context.user.id)
+    title = request.json['title']
+    data = request.json['data']
+
+    m = hashlib.blake2b(digest_size=12)
+    m.update((title + str(datetime.utcnow())).encode())
+    hashed = m.hexdigest()
+    obj = models.Content(title=title, data=data, uid=context.user.id, permanent_id=hashed, origin=enums.DataOriginEnum.SSCROLL_BOARD)
+    obj.created_at = datetime.utcnow() + timedelta(hours=9)
     html = BeautifulSoup(obj.data, 'html.parser')
     for img in html.select('img'):
         if img['src'].startswith('data'):
@@ -243,11 +248,10 @@ def board(context):
             data, img_src = img['src'].split(',')
             mime_type = data[5:].split(';')[0]
             type = mime_type.split('/')[1]
-            rename = hashlib.sha256(img['data-filename'].encode()).hexdigest()
+            rename = hashlib.sha256(img['alt'].encode()).hexdigest()
             s3.put_object(Body=base64.b64decode(img_src.encode()), Bucket=bucket, Key=f'{rename}.{type}', ACL='public-read')
             img['src'] = Config.CDN_PATH + f'{rename}.{type}'
-            del img['data-filename']
-            del img['style']
+            del img['alt']
             print(f'upload {rename}.{type}')
             print(f'changed {img["src"]}')
         else:
@@ -259,5 +263,5 @@ def board(context):
     db.session.add(obj)
     db.session.commit()
 
-    return 'success'''
+    return ujson.dumps(obj.to_json())
 
