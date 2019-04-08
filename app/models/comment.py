@@ -2,7 +2,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String, Integer, DateTime, Enum, ARRAY, ForeignKey
 from sqlalchemy.orm import relationship
 
+import db
 from db import Base
+
+from app import models
 
 
 class Comment(Base):
@@ -24,7 +27,18 @@ class Comment(Base):
     children = relationship('Comment', lazy='joined')
 
     def to_json(self):
+        session = db.session.object_session(self)
+        user = session.query(models.User).\
+            filter(models.User.id == self.uid).\
+            first()
+
         return {
-            'data': self.data
+            'data': self.data,
+            'id': self.id,
+            'parent_id': self.parent_id,
+            'children': [c.to_json() for c in self.children],
+            'user': user.to_json(),
+            'created_at': self.created_at,
+            'date': self.created_at.strftime('%Y.%m.%d')
         }
 

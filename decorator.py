@@ -1,3 +1,6 @@
+import hashlib
+import random
+import string
 
 from flask import session
 
@@ -19,6 +22,7 @@ def router(application, **kwargs):
                 context = ApiContext()
                 kwargs['context'] = context
                 res = fn(*args, **kwargs)
+                print(context.user.to_json())
                 pr.disable()
                 # pr.print_stats(sort='time')
                 return res
@@ -30,15 +34,22 @@ def router(application, **kwargs):
 
 
 class ApiContext:
-
     def __init__(self):
         self.user = None
 
-        if 'email' in session and 'signup_type' in session:
-            email = session['email']
-            signup_type = session['signup_type']
+        def create_nickname():
+            N = 10
+            return ''.join(random.choices(string.ascii_uppercase + string.digits, k=N))
 
-            self.user = db.session.query(models.User).\
-                    filter(models.User.email == email).\
-                    filter(models.User.signup_type == signup_type).\
-                    first()
+        if 'nickname' not in session:
+            nickname = hashlib.shake_128(create_nickname().encode()).hexdigest(length=4)
+            session['nickname'] = nickname
+        
+        self.user = db.session.query(models.User).\
+            filter(models.User.nickname == session['nickname']).\
+            first()
+        
+        if self.user is None:
+            self.user = models.User(nickname=session['nickname'])
+            db.session.add(self.user)
+            db.session.commit()
