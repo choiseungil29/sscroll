@@ -21,7 +21,9 @@ def router(application, **kwargs):
                 pr.enable()
                 context = ApiContext()
                 kwargs['context'] = context
+                print('hi')
                 res = fn(*args, **kwargs)
+                nickname = context.user.to_json()
                 print(context.user.to_json())
                 pr.disable()
                 # pr.print_stats(sort='time')

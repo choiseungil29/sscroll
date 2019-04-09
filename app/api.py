@@ -34,7 +34,7 @@ bucket = 'sichoi-scroll'
 def test(context):
     return 'hi!'
 
-@api('/view', methods=['GET'])
+'''@api('/view', methods=['GET'])
 def view(context):
     res = make_response()
     pid = request.args.get('pid')
@@ -53,31 +53,6 @@ def view(context):
 
     return res
 
-@api('/renew', methods=['GET'])
-def fake(context):
-    search_range = datetime.utcnow().replace(month=1).replace(day=1).replace(hour=0).replace(minute=0)
-
-    all_data = db.session.query(models.Content).\
-            filter(models.Content.created_at > search_range).\
-            all()
-    
-    random.choice(all_data)
-
-    return render_template('renew.html', data=random.choice(all_data).to_json())
-
-@api('/renew1', methods=['GET'])
-def fake1(context):
-    search_range = datetime.utcnow().replace(month=1).replace(day=1).replace(hour=0).replace(minute=0)
-
-    all_data = db.session.query(models.Content).\
-            filter(models.Content.created_at > search_range).\
-            all()
-    
-    random.choice(all_data)
-
-    return render_template('renew1.html', data=random.choice(all_data).to_json())
-
-
 
 @api('/recent', methods=['GET'])
 def recent(context):
@@ -89,43 +64,7 @@ def recent(context):
             order_by(desc(models.ShowedContent.created_at)).\
             all()
 
-    return ujson.dumps([recent.to_json() for recent in recents])
-
-
-@api('/login', methods=['POST'])
-def login(context):
-    token = request.json['accessToken']
-    header = 'Bearer ' + token
-    url = "https://openapi.naver.com/v1/nid/me"
-    req = urllib.request.Request(url)
-    req.add_header("Authorization", header)
-    response = urllib.request.urlopen(req)
-    rescode = response.getcode()
-    if rescode == 200:
-        res = ujson.loads(response.read())
-    else:
-        print("Error Code:" + rescode)
-
-    user = db.session.query(models.User).\
-            filter(models.User.email == res['response']['email']).\
-            filter(models.User.signup_type == enums.SignupTypeEnum.NAVER).\
-            first()
-    status = 200
-
-    if user is None:
-        user = models.User(signup_type=enums.SignupTypeEnum.NAVER, email = res['response']['email'], access_token=token)
-        N = 12
-        user.nickname = ''.join(random.choices(string.ascii_uppercase + string.digits, k=N))
-        db.session.add(user)
-        db.session.commit()
-        status = 201
-
-    session['email'] = user.email
-    session['signup_type'] = user.signup_type.name
-
-    context.user = user
-
-    return ujson.dumps(user.to_json()), status
+    return [recent.to_json() for recent in recents]'''
 
 
 @api('/fill', methods=['GET'])
@@ -147,40 +86,6 @@ def get_content(id, context):
 
     return ujson.dumps(content.to_json())
     
-
-@api('/<url>/ward', methods=['POST'])
-def set_ward(url, context):
-    c = db.session.query(models.Content).\
-            filter(models.Content.permanent_id == url).first()
-
-    res = make_response('와드 성공!')
-    if context.user is None:
-        wards = ujson.loads(request.cookies.get('wards', ujson.dumps({})))
-
-        if url not in wards:
-            ward = models.Ward()
-            ward.created_at = datetime.now()
-            ward.cid = c.id
-            wards[url] = ward.to_json()
-
-        res.set_cookie('wards', ujson.dumps(wards))
-    else:
-        ward = db.session.query(models.Ward).\
-                filter(models.Ward.uid == context.user.id).\
-                filter(models.Ward.cid == c.id).\
-                first()
-
-        if ward is None:
-            ward = models.Ward(uid=context.user.id, cid=c.id)
-            db.session.add(ward)
-
-        else:
-            res = make_response('이미 와드되어있습니다.')
-
-    db.session.commit()
-    return res
-
-
 
 @api('/comment', methods=['POST'])
 def comment(context):
@@ -204,30 +109,6 @@ def comment(context):
     db.session.commit()
 
     return ujson.dumps(comment.to_json())
-
-
-@api('/board', methods=['GET'])
-def get_all_board(context):
-    boards = db.session.query(models.Board).\
-            all()
-
-    return ujson.dumps([b.to_json() for b in boards])
-
-@api('/signup', methods=['POST'])
-def signup(context):
-    print(request.data)
-    req = request.json
-    
-    user = db.session.query(models.User).\
-            filter(models.User.nickname == req['nickname']).\
-            first()
-
-    if user is not None:
-        return 'EXIST', 400
-
-    context.user.nickname = req['nickname']
-    db.session.commit()
-    return 'OK'
 
 
 @api('/board', methods=['POST'])
