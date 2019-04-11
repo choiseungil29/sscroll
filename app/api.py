@@ -34,26 +34,8 @@ bucket = 'sichoi-scroll'
 def test(context):
     return 'hi!'
 
-'''@api('/view', methods=['GET'])
-def view(context):
-    res = make_response()
-    pid = request.args.get('pid')
-    if context.user is not None:
-        content = db.session.query(models.Content).\
-                filter(models.Content.permanent_id == pid).\
-                first()
-        showed_content = db.session.query(models.ShowedContent).\
-                filter(models.ShowedContent.uid == context.user.id).\
-                filter(models.ShowedContent.cid == content.id).\
-                first()
-        if showed_content is None:
-            showed_content = models.ShowedContent(uid=context.user.id, content=content)
-            db.session.add(showed_content)
-            db.session.commit()
 
-    return res
-
-
+'''
 @api('/recent', methods=['GET'])
 def recent(context):
     if context.user is None:
@@ -73,23 +55,45 @@ def fill(context):
     search_range = datetime.utcnow().replace(month=1).replace(day=1).replace(hour=0).replace(minute=0)
 
     all_data = db.session.query(models.Content).\
-            all()
+        all()
+
+    random.shuffle(all_data)
+    
+    showed_all = db.session.query(models.ShowedContent).\
+        filter(models.ShowedContent.uid == context.user.id).\
+        all()
 
     data = []
-    for d in range(3):
-        data.append(random.choice(all_data))
+    for c in all_data:
+        if len(data) > 3:
+            break
+
+        if len(list(filter(lambda x: x.cid == c.id, showed_all))) > 0:
+            continue
+
+        data.append(c)
     
-    return ujson.dumps([c.to_json() for c in all_data])
-    # return ujson.dumps([c.to_json() for c in all_data])
+    return ujson.dumps([c.to_json() for c in data])
 
 @api('/contents/<id>/comments', methods=['GET'])
 def comments(context, id):
-
     content = db.session.query(models.Content).\
         filter(models.Content.permanent_id == id).\
         first()
     
     return ujson.dumps([c.to_json() for c in content.comments])
+
+
+@api('/contents/<id>/view', methods=['POST'])
+def view_content(context, id):
+    content = db.session.query(models.Content).\
+        filter(models.Content.permanent_id == id).\
+        first()
+
+    showed = models.ShowedContent(uid=context.user.id, cid=content.id)
+    db.session.add(showed)
+    db.session.commit()
+    return 'view'
 
 
 @api('/<id>', methods=['GET'])
