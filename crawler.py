@@ -10,6 +10,7 @@ import os
 import re
 import cfscrape
 import traceback
+import sys
 
 from functools import partial
 from bs4 import BeautifulSoup
@@ -90,10 +91,9 @@ class Dogdrip(Crawler):
         print('parse content')
         try:
             new = bs
+            print(bs)
             title = new.select('h4')[0].text
 
-            if '썰' not in title:
-                return None
             m = hashlib.blake2b(digest_size=12)
             m.update(title.encode())
             hashed = m.hexdigest()
@@ -111,9 +111,29 @@ class Dogdrip(Crawler):
                 print('passed')
                 return exist
             
-            date = new.select('div.ed.flex.flex-wrap.flex-left.flex-middle.title-toolbar span.ed.text-xsmall.text-muted')[-1].text
+            date = None
+            for date_obj in new.select('div.ed.flex.flex-wrap.flex-left.flex-middle.title-toolbar span.ed.text-xsmall.text-muted'):
+                text = date_obj.text
+                delta = None
+                if '일 전' in text:
+                    delta = timedelta(days=int(text[0]))
+                if '시간 전' in text:
+                    delta = timedelta(hours=int(text[0]))
+                if '분 전' in text:
+                    delta = timedelta(minutes=int(text[0]))
+                    
+                if delta is not None:
+                    date = datetime.utcnow() + timedelta(hours=9) - delta
+                else:
+                    try:
+                        date = datetime.strptime(text, '%Y.%m.%d')
+                    except:
+                        print('continued')
+                        continue
+                    break
+                    
 
-            delta = None
+            '''delta = None
             if '일 전' in date:
                 delta = timedelta(days=int(date[0]))
             if '시간 전' in date:
@@ -124,9 +144,11 @@ class Dogdrip(Crawler):
             if delta is not None:
                 date = datetime.utcnow() + timedelta(hours=9) - delta
             else:
-                date = datetime.strptime(date, '%Y.%m.%d')
+                breakpoint()
+                date = datetime.strptime(date, '%Y.%m.%d')'''
             
-            writer = new.select(' div.ed.flex.flex-wrap.flex-left.flex-middle.title-toolbar > div.ed.flex.flex-wrap a')[0].text
+            # writer = new.select('div.ed.flex.flex-wrap.flex-left.flex-middle.title-toolbar > div.ed.flex.flex-wrap a')
+            writer = new.select('div.title-toolbar span')[0].text.strip()
             writer = hashlib.shake_128(writer.encode()).hexdigest(length=4)
 
             user = models.User(nickname=writer)
@@ -136,7 +158,10 @@ class Dogdrip(Crawler):
             # TODO 2: 작성자 아이디 구해와서 해싱
             # DOIT!
 
-            content = new.select('div#article_1')[0]
+            content = new.select('div.ed.article-wrapper.inner-container > div.ed > div')[1]
+            content = content.select('div')[0]
+            # breakpoint()
+            # content = new.select('div#article_1')[0]
             length = len(content.select('img'))
             for img in content.select('img'):
                 if 'sichoi-scroll' in img['src']:
@@ -170,9 +195,12 @@ class Dogdrip(Crawler):
             item.created_at = datetime.utcnow() + timedelta(hours=9)
         
         data = new.select('script[type="text/javascript"]')[0].text
-        up, down = filter(lambda x: x != '', re.compile('[0-9]*').findall(data))
-        item.up = up
-        item.down = down
+        try:
+            up, down = filter(lambda x: x != '', re.compile('[0-9]*').findall(data))
+            item.up = up
+            item.down = down
+        except:
+            pass
         session.add(item)
         session.commit()
         print('added!')
@@ -217,7 +245,11 @@ class Dogdrip(Crawler):
                 else:
                     date = datetime.strptime(date, '%Y.%m.%d')
                 
-                writer = box.select('a.ed.link-reset')[0].text
+                selected = box.select('div.comment-bar > div')
+                if len(selected) == 0:
+                    selected = box.select('div.comment-bar-author > div')
+                writer = selected[0].text.strip()
+                # writer = box.select('a.ed.link-reset')[0].text
                 writer = hashlib.shake_128(writer.encode()).hexdigest(length=4)
 
                 user = session.query(models.User).\
@@ -237,9 +269,14 @@ class Dogdrip(Crawler):
                     comment.parent_id = before_comment.id
                 else:
                     before_comment = comment
-                session.add(comment)
-                session.flush()
-                print(text)
+                
+                exist = session.query(models.Comment).\
+                    filter(models.Comment.uid == user.id).\
+                    first()
+                if not exist:
+                    session.add(comment)
+                    session.flush()
+                    print(text)
 
         session.commit()
         return content
@@ -267,6 +304,7 @@ class Dogdrip(Crawler):
 
         fts = []
         for c in self.contents:
+            print(c)
             k, v = c.split('=')
             fts.append(asyncio.ensure_future(self.fetch_contents({k: v})))
 
@@ -280,7 +318,25 @@ async def crawl():
         session.commit()
     print('ended')
 
+async def crawl_target(url):
+    dogdrip = Dogdrip()
+    async with dogdrip:
+        params = {}
+        if len(url.split('?')) == 1:
+            params['document_srl'] = url.split('/')[-1]
+        else:
+            for param in url.split('?')[1].split('&'):
+                k, v = param.split('=')
+                params[k] = v
+        await dogdrip.fetch_contents(params)
+
 
 loop = asyncio.get_event_loop()
-loop.run_until_complete(crawl())
+if len(sys.argv) > 1:
+    loop.run_until_complete(crawl_target(sys.argv[1]))
+        
+else:
+    loop.run_until_complete(crawl())
 # loop.close()
+
+

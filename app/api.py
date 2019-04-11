@@ -74,8 +74,13 @@ def fill(context):
 
     all_data = db.session.query(models.Content).\
             all()
+
+    data = []
+    for d in range(3):
+        data.append(random.choice(all_data))
     
     return ujson.dumps([c.to_json() for c in all_data])
+    # return ujson.dumps([c.to_json() for c in all_data])
 
         
 @api('/<id>', methods=['GET'])
