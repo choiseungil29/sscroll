@@ -67,9 +67,9 @@ def recent(context):
     return [recent.to_json() for recent in recents]'''
 
 
-@api('/fill', methods=['GET'])
+@api('/contents', methods=['GET'])
 def fill(context):
-    print('fill')
+    print('contents')
     search_range = datetime.utcnow().replace(month=1).replace(day=1).replace(hour=0).replace(minute=0)
 
     all_data = db.session.query(models.Content).\
@@ -82,7 +82,16 @@ def fill(context):
     return ujson.dumps([c.to_json() for c in all_data])
     # return ujson.dumps([c.to_json() for c in all_data])
 
-        
+@api('/contents/<id>/comments', methods=['GET'])
+def comments(context, id):
+
+    content = db.session.query(models.Content).\
+        filter(models.Content.permanent_id == id).\
+        first()
+    
+    return ujson.dumps([c.to_json() for c in content.comments])
+
+
 @api('/<id>', methods=['GET'])
 def get_content(id, context):
     content = db.session.query(models.Content).\

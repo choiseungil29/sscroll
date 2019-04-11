@@ -26,7 +26,8 @@ def router(application, **kwargs):
                 nickname = context.user.to_json()
                 print(context.user.to_json())
                 pr.disable()
-                # pr.print_stats(sort='time')
+                pr.print_stats(sort='time')
+                # print(f'length : ')
                 return res
             application.add_url_rule(uri, fn.__name__, decorator, **kwargs)
             return decorator
