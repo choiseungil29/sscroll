@@ -13,13 +13,10 @@ class ShowedContent(Base):
 
     __tablename__ = 'showed_contents'
 
-    id = Column(Integer, primary_key=True)
     cid = Column(Integer, ForeignKey('contents.id'))
     content = relationship('Content', back_populates='showed_contents')
 
     uid = Column(Integer)
     
-    created_at = Column(DateTime, default=datetime.now)
-
     __table_args__ = (Index('ix_uid_cid', "id", "cid"), )
  

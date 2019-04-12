@@ -15,7 +15,6 @@ class User(Base):
 
     __tablename__ = 'users'
 
-    id = Column(Integer, primary_key=True)
     # signup_type = Column(Enum(enums.SignupTypeEnum))
     nickname = Column(String)
     # email = Column(String)

@@ -18,13 +18,11 @@ class Content(Base):
 
     __tablename__ = 'contents'
 
-    id = Column(Integer, primary_key=True)
     uid = Column(Integer)
     title = Column(String)
     data = Column(String)
     permanent_id = Column(String, unique=True, index=True)
     origin = Column(Enum(enums.DataOriginEnum))
-    created_at = Column(DateTime)
     showed_contents = relationship('ShowedContent', back_populates='content', order_by='ShowedContent.created_at')
     comments = relationship('Comment', back_populates='content')
 
@@ -32,8 +30,7 @@ class Content(Base):
     down = Column(Integer, default=0)
 
     def to_json(self):
-        session = db.session.object_session(self)
-        user = session.query(models.User).\
+        user = self.session.query(models.User).\
             filter(models.User.id == self.uid).\
             first()
 
@@ -51,7 +48,3 @@ class Content(Base):
             'user': user.to_json(),
             'type': self.origin
         }
-    
-    def is_view(self):
-        pass
-

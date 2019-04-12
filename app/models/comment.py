@@ -15,8 +15,6 @@ class Comment(Base):
 
   __tablename__ = 'comments'
 
-  created_at = Column(DateTime)
-  id = Column(Integer, primary_key=True)
   uid = Column(Integer)
   data = Column(String)
   
@@ -27,8 +25,7 @@ class Comment(Base):
   children = relationship('Comment', lazy='joined')
 
   def to_json(self):
-    session = db.session.object_session(self)
-    user = session.query(models.User).\
+    user = self.session.query(models.User).\
       filter(models.User.id == self.uid).\
       first()
 
