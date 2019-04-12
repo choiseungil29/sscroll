@@ -96,7 +96,7 @@ def view_content(context, id):
     return 'view'
 
 
-@api('/<id>', methods=['GET'])
+@api('/contents/<id>', methods=['GET'])
 def get_content(id, context):
     content = db.session.query(models.Content).\
             filter(models.Content.permanent_id == id).\
