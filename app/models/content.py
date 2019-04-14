@@ -41,13 +41,20 @@ class Content(Base):
         now = datetime.utcnow() + timedelta(hours=9)
         delta = now - self.created_at
         if delta < timedelta(minutes=1):
-            date = f'{delta.seconds}초 전'
+            date = f'{int(delta.seconds)}초 전'
         elif delta < timedelta(hours=1):
-            date = f'{delta.seconds//60}분 전'
+            date = f'{int(delta.seconds//60)}분 전'
         elif delta < timedelta(days=1):
-            date = f'{delta.seconds/60//60}시간 전'
+            date = f'{int(delta.seconds/60//60)}시간 전'
         elif delta < timedelta(days=7):
-            date = f'{delta.seconds/60/60//24}일 전'
+            date = f'{delta.days}일 전'
+        
+        print(self.title)
+        if '0.0' in date:
+            breakpoint()
+            print('sibal')
+        print(date)
+        # breakpoint()
 
         return {
             'id': self.id,
