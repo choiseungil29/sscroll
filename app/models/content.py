@@ -2,7 +2,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String, Integer, DateTime, Enum, ARRAY, ForeignKey
 from sqlalchemy.orm import relationship
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app import models
 from db import Base
@@ -33,6 +33,19 @@ class Content(Base):
         user = self.session.query(models.User).\
             filter(models.User.id == self.uid).\
             first()
+        
+        date = self.created_at.strftime('%Y.%m.%d')
+
+        now = datetime.utcnow() + timedelta(hours=9)
+        delta = now - self.created_at
+        if delta < timedelta(minutes=1):
+            date = f'{delta.seconds}초 전'
+        elif delta < timedelta(hours=1):
+            date = f'{delta.seconds//60}분 전'
+        elif delta < timedelta(days=1):
+            date = f'{delta.seconds/60//60}시간 전'
+        elif delta < timedelta(days=7):
+            date = f'{delta.seconds/60/60//24}일 전'
 
         return {
             'id': self.id,
@@ -44,7 +57,7 @@ class Content(Base):
             'comments': [],
             'up': self.up,
             'down': self.down,
-            'date': self.created_at.strftime('%Y.%m.%d'),
+            'date': date,
             'user': user.to_json(),
             'type': self.origin
         }
