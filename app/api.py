@@ -96,14 +96,32 @@ def view_content(context, id):
     return 'view'
 
 
+@api('/contents/<id>/like', methods=['POST'])
+def like_content(id, context):
+    content = db.session.query(models.Content).\
+        filter(models.Content.permanent_id == id).\
+        first()
+
+    context.user.likes += [content]
+    db.session.commit()
+
+    return 'succeed'
+
+
+
+@api('/contents/<id>/unlike', methods=['POST'])
+def unlike_content(id, context):
+    pass
+
+
 @api('/contents/<id>', methods=['GET'])
 def get_content(id, context):
     content = db.session.query(models.Content).\
-            filter(models.Content.permanent_id == id).\
-            first()
+        filter(models.Content.permanent_id == id).\
+        first()
 
     return ujson.dumps(content.to_json())
-    
+
 
 @api('/comment', methods=['POST'])
 def comment(context):

@@ -1,6 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String, Integer, DateTime, Enum, ARRAY, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, Integer, DateTime, Enum, ARRAY, ForeignKey, Table
+from sqlalchemy.orm import relationship, backref
 
 from datetime import datetime, timedelta
 
@@ -28,6 +28,8 @@ class Content(Base):
 
     up = Column(Integer, default=0)
     down = Column(Integer, default=0)
+    ups = relationship('User', secondary='likes_with_users')
+    downs = relationship('User', secondary='unlikes_with_users')
 
     def to_json(self):
         user = self.session.query(models.User).\
@@ -61,3 +63,12 @@ class Content(Base):
             'user': user.to_json(),
             'type': self.origin
         }
+
+
+LikesWithUsers = Table('likes_with_users', Base.metadata,
+    Column('content_id', Integer, ForeignKey('contents.id')),
+    Column('user_id', Integer, ForeignKey('users.id')))
+
+UnlikesWithUsers = Table('unlikes_with_users', Base.metadata,
+    Column('content_id', Integer, ForeignKey('contents.id')),
+    Column('user_id', Integer, ForeignKey('users.id')))

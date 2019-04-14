@@ -16,6 +16,9 @@ class User(Base):
     __tablename__ = 'users'
 
     nickname = Column(String)
+    
+    likes = relationship('Content', secondary='likes_with_users')
+    unlikes = relationship('Content', secondary='unlikes_with_users')
 
     def to_json(self):
         return {
