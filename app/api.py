@@ -122,7 +122,6 @@ def unlike_content(id, context):
     else:
         context.user.unlikes += [content]
     db.session.commit()
-    print(content.to_json())
 
     return ujson.dumps(content.to_json())
 
