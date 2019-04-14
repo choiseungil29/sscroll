@@ -129,6 +129,15 @@ def comment(context):
     return ujson.dumps(comment.to_json())
 
 
+@api('/board', methods=['GET'])
+def get_boards(context):
+    boards = db.session.query(models.Content).\
+        filter(models.Content.origin == enums.DataOriginEnum.SSCROLL_BOARD).\
+        all()
+    
+    return ujson.dumps([b.to_json() for b in boards])
+
+
 @api('/board', methods=['POST'])
 def board(context):
 
