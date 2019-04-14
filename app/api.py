@@ -102,16 +102,29 @@ def like_content(id, context):
         filter(models.Content.permanent_id == id).\
         first()
 
-    context.user.likes += [content]
+    if content in context.user.likes:
+        context.user.likes.remove(content)
+    else:
+        context.user.likes += [content]
     db.session.commit()
 
-    return 'succeed'
-
+    return ujson.dumps(content.to_json())
 
 
 @api('/contents/<id>/unlike', methods=['POST'])
 def unlike_content(id, context):
-    pass
+    content = db.session.query(models.Content).\
+        filter(models.Content.permanent_id == id).\
+        first()
+
+    if content in context.user.unlikes:
+        context.user.unlikes.remove(content)
+    else:
+        context.user.unlikes += [content]
+    db.session.commit()
+    print(content.to_json())
+
+    return ujson.dumps(content.to_json())
 
 
 @api('/contents/<id>', methods=['GET'])

@@ -58,7 +58,9 @@ class Content(Base):
             # 'comments': [c.to_json() for c in self.comments],
             'comments': [],
             'up': self.up,
+            'ups': [u.to_json() for u in self.ups],
             'down': self.down,
+            'downs': [u.to_json() for u in self.downs],
             'date': date,
             'user': user.to_json(),
             'type': self.origin
