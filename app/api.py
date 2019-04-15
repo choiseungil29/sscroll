@@ -35,20 +35,6 @@ def test(context):
     return 'hi!'
 
 
-'''
-@api('/recent', methods=['GET'])
-def recent(context):
-    if context.user is None:
-        raise
-
-    recents = db.session.query(models.ShowedContent).\
-            filter(models.ShowedContent.uid == context.user.id).\
-            order_by(desc(models.ShowedContent.created_at)).\
-            all()
-
-    return [recent.to_json() for recent in recents]'''
-
-
 @api('/contents', methods=['GET'])
 def fill(context):
     print('contents')
@@ -90,9 +76,15 @@ def view_content(context, id):
         filter(models.Content.permanent_id == id).\
         first()
 
-    showed = models.ShowedContent(uid=context.user.id, cid=content.id)
-    db.session.add(showed)
-    db.session.commit()
+    showed = db.session.query(models.ShowedContent).\
+        filter(models.ShowedContent.cid == content.id).\
+        filter(models.ShowedContent.uid == context.user.id).\
+        first()
+    
+    if not showed:
+        showed = models.ShowedContent(uid=context.user.id, cid=content.id)
+        db.session.add(showed)
+        db.session.commit()
     return 'view'
 
 
@@ -203,3 +195,33 @@ def board(context):
 
     return ujson.dumps(obj.to_json())
 
+
+@api('/users', methods=['GET'])
+def users(context):
+    data = context.user.to_json()
+
+    comments = db.session.query(models.Comment).\
+        filter(models.Comment.uid == context.user.id).\
+        order_by(models.Comment.created_at.desc()).\
+        all()
+
+    data['comments'] = [c.to_json() for c in comments]
+
+    contents = db.session.query(models.Content).\
+        filter(models.Content.uid == context.user.id).\
+        order_by(models.Content.created_at.desc()).\
+        all()
+    
+    data['contents'] = [c.to_json() for c in contents]
+
+    showed_contents = db.session.query(models.ShowedContent).\
+        filter(models.ShowedContent.uid == context.user.id).\
+        order_by(models.ShowedContent.updated_at.desc()).\
+        all()
+
+    data['recent'] = [s.to_json() for s in showed_contents]
+
+    data['likes'] = [c.to_json() for c in context.user.likes]
+    data['unlikes'] = [c.to_json() for c in context.user.unlikes]
+
+    return ujson.dumps(data)

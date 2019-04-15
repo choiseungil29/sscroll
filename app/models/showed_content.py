@@ -20,3 +20,8 @@ class ShowedContent(Base):
     
     __table_args__ = (Index('ix_uid_cid', "id", "cid"), )
  
+    def to_json(self):
+        return {
+            'created_at': self.created_at,
+            'content': self.content.to_json()
+        }

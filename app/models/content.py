@@ -50,9 +50,6 @@ class Content(Base):
             date = f'{delta.days}일 전'
         
         print(self.title)
-        if '0.0' in date:
-            breakpoint()
-            print('sibal')
         print(date)
         # breakpoint()
 
