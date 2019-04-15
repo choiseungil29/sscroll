@@ -51,7 +51,7 @@ def fill(context):
 
     data = []
     for c in all_data:
-        if len(data) > 5:
+        if len(data) > 10:
             break
 
         if len(list(filter(lambda x: x.cid == c.id, showed_all))) > 0:
