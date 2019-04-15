@@ -162,9 +162,8 @@ class Dogdrip(Crawler):
             content = content.select('div')[0]
             # breakpoint()
             # content = new.select('div#article_1')[0]
-            length = len(content.select('img'))
             for img in content.select('img'):
-                if 'sichoi-scroll' in img['src']:
+                if 'img.sscroll.net' in img['src']:
                     print('continued')
                     continue
                 if './' in img['src']:
@@ -185,6 +184,30 @@ class Dogdrip(Crawler):
                 s3.upload_file(rename, bucket, 'upload/' + rename, ExtraArgs={'ACL': 'public-read', 'CacheControl': 'max-age=2592000'})
                 os.remove(rename)
                 img['src'] = 'http://img.sscroll.net/upload/'+ rename
+            
+            for video in content.select('source'):
+                if 'img.sscroll.net' in video['src']:
+                    print('continued')
+                    continue
+                if './' in video['src']:
+                    video['src'] = video['src'].replace('./', 'http://www.dogdrip.net/')
+                elif video['src'].startswith('/'):
+                    video['src'] = 'https://www.dogdrip.net' + video['src']
+                elif not video['src'].startswith('http'):
+                    video['src'] = 'https://www.dogdrip.net/' + video['src']
+
+                if 'transparent' in video['src']:
+                    return
+
+                for_img = hashlib.sha256(video['src'].encode())
+                last = video['src'].split('.')[-1]
+                rename = for_img.hexdigest()
+                rename += '.' + last
+                urllib.request.urlretrieve(video['src'], rename)
+                s3.upload_file(rename, bucket, 'upload/' + rename, ExtraArgs={'ACL': 'public-read', 'CacheControl': 'max-age=2592000'})
+                os.remove(rename)
+                video['src'] = 'http://img.sscroll.net/upload/'+ rename
+
             content = content.decode()
         except Exception as e:
             print('exit')
