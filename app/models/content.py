@@ -48,10 +48,6 @@ class Content(Base):
             date = f'{int(delta.seconds/60//60)}시간 전'
         elif delta < timedelta(days=7):
             date = f'{delta.days}일 전'
-        
-        print(self.title)
-        print(date)
-        # breakpoint()
 
         return {
             'id': self.id,
