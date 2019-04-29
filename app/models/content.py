@@ -57,13 +57,15 @@ class Content(Base):
             'created_at': self.created_at,
             # 'comments': [c.to_json() for c in self.comments],
             'comments': [],
+            'comments_length': len(self.comments),
             'up': self.up,
             'ups': [u.to_json() for u in self.ups],
             'down': self.down,
             'downs': [u.to_json() for u in self.downs],
             'date': date,
             'user': user.to_json(),
-            'type': self.origin
+            'type': self.origin,
+            'viewed': len(self.showed_contents),
         }
 
 
