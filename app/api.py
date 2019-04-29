@@ -98,6 +98,9 @@ def like_content(id, context):
         context.user.likes.remove(content)
     else:
         context.user.likes += [content]
+    
+    if content in context.user.likes and content in context.user.unlikes:
+        context.user.unlikes.remove(content)
     db.session.commit()
 
     return ujson.dumps(content.to_json())
@@ -113,6 +116,9 @@ def unlike_content(id, context):
         context.user.unlikes.remove(content)
     else:
         context.user.unlikes += [content]
+
+    if content in context.user.unlikes and content in context.user.likes:
+        context.user.likes.remove(content)
     db.session.commit()
 
     return ujson.dumps(content.to_json())
