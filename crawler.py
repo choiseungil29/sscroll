@@ -250,10 +250,14 @@ class Dogdrip(Crawler):
             for comment_box in comment_list.findAll(lambda x: x.name == 'div' and 'class' in x.attrs and 'comment-item' in x.attrs['class']):
                 box = comment_box.select('> div')[0].select('> div')[0]
 
-                text = box.find('div', attrs={'class': 'xe_content'}).text
+                try:
+                    text = box.find('div', attrs={'class': 'xe_content'}).text
+                except Exception as e:
+                    continue
                 if not text:
                     before_comment = None
-                    continue
+                    print('continued')
+                    break
                 date = box.find('div').findAll('div')[-1].find('span').text
                 delta = None
                 if '일 전' in date:

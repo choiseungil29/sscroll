@@ -41,6 +41,7 @@ def fill(context):
     search_range = datetime.utcnow().replace(month=1).replace(day=1).replace(hour=0).replace(minute=0)
 
     all_data = db.session.query(models.Content).\
+        filter(models.Content.created_at > search_range).\
         all()
 
     random.shuffle(all_data)
